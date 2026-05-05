@@ -1,5 +1,5 @@
 # DeYoung Disclosure — Site Requirements
-## Last updated: 2026-05-05
+## Last updated: 2026-05-05 (post approval pipeline added)
 
 ---
 
@@ -109,6 +109,81 @@ Site lives at **deyoungdisclosure.com**.
 - **Themes:** Strength, accountability, transparency
 - **Audience:** Holland Charter Township residents, local Facebook/Nextdoor communities
 - **What this is not:** A complaint site, a campaign attack site, or a legal filing
+
+---
+
+## Post Approval Pipeline (v2 — Cloudflare Workers)
+
+The `/dave-post` skill generates drafts. This pipeline takes an approved draft from Steven's
+hands and puts it in Dave's — one tap from Dave and it fires everywhere automatically.
+
+### Post States
+
+```
+draft → pending_approval → approved → published
+                        ↘ rejected
+                        ↘ rejected_with_edits → (back to draft)
+```
+
+### Flow
+
+1. **Steven runs `/dave-post`**, iterates on the draft, marks it ready
+2. **Skill submits the post** to the Worker `/post/submit` endpoint (authenticated)
+3. **Worker stores the post** in Cloudflare KV with state `pending_approval`
+4. **Worker generates a signed approval link** and emails it to Dave
+5. **Dave clicks the link** — sees a minimal preview page (post content, image, platform targets)
+6. **Dave chooses:**
+   - ✅ **Approve** → Worker fires Meta Graph API (FB + Instagram), creates Decap CMS entry, triggers Pages rebuild, marks post `published`
+   - ❌ **Reject** → Post marked `rejected`, Steven notified
+   - ✏️ **Reject with Edits** → Dave adds a note, post returns to `draft`, Steven notified with Dave's note
+7. **Audit trail** — every state transition timestamped and stored in KV
+
+### Worker Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/post/submit` | POST | Skill token (HMAC) | Receives draft from skill, stores in KV, sends approval email |
+| `/api/post/approve` | GET | Signed token in URL | Dave's one-click approve — validates token, fires publish |
+| `/api/post/reject` | POST | Signed token in URL | Dave rejects, optional note |
+| `/api/post/status` | GET | Skill token | Check current state of a post by ID |
+
+### Approval Link Security
+
+- Each pending post gets a unique HMAC-SHA256 token signed with a server secret
+- Token encodes: `post_id + expiry + action`
+- Single-use — token is invalidated after Dave acts on it
+- 7-day expiry — if Dave doesn't act, post stays in `pending_approval` for re-send
+
+### Dave's Approval Page
+
+- Minimal, mobile-friendly — loads fast on a phone tap from email
+- Shows: post content, image preview, target platforms
+- Three buttons: Approve / Reject / Reject with Edits
+- No login required — the signed token in the URL is the auth
+- Confirms action with a simple "Post sent!" or "Post rejected." screen
+
+### Notifications
+
+- Dave receives: email with approval link when a post is submitted
+- Steven receives: email confirmation when Dave approves or rejects
+- Future: SMS fallback for Dave if email link goes unopened after 24 hours
+
+### Storage (Cloudflare KV)
+
+```
+posts:{id} → { content, image, platforms, state, created_at, updated_at, token, dave_note }
+```
+
+### Tech Stack Addition
+
+| Concern | Solution |
+|---------|----------|
+| Worker runtime | Cloudflare Workers |
+| State storage | Cloudflare KV |
+| Email delivery | Resend (free tier, 3k/mo) |
+| Token signing | Web Crypto API (built into Workers) |
+| Social publish | Meta Graph API |
+| CMS entry | Decap CMS via GitHub Contents API |
 
 ---
 
