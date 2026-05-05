@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+.svelte-kit/
+build/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Context files — never push to repo
+_context/
+
+# OS
+.DS_Store
+Thumbs.db
