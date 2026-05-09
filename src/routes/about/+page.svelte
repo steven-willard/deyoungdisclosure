@@ -22,7 +22,7 @@
 		<div class="md:col-span-1">
 			<div class="aspect-[3/4] bg-surface rounded-lg border border-white/10 overflow-hidden mb-6">
 				<img
-					src="https://photos.listingstoleads.com/member_assets/photo/1682712050.jpg"
+					src="https://wisdomrealestategroup.com/files/2023/01/Screen-Shot-2023-01-04-at-5.22.06-PM.jpg"
 					alt="Dave DeYoung — Holland Charter Township Trustee"
 					class="w-full h-full object-cover object-top"
 				/>
