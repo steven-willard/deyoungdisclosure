@@ -7,7 +7,7 @@
 		type = 'website'
 	} = $props();
 
-	const fullTitle = title.includes('Dave DeYoung') ? title : `${title} | Dave DeYoung`;
+	const fullTitle = $derived(title.includes('Dave DeYoung') ? title : `${title} | Dave DeYoung`);
 </script>
 
 <svelte:head>
