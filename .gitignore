@@ -14,6 +14,12 @@ dist/
 # Context files — never push to repo
 _context/
 
+# Wrangler local state
+.wrangler/
+
+# PDFs (agreements, private docs)
+*.pdf
+
 # OS
 .DS_Store
 Thumbs.db
