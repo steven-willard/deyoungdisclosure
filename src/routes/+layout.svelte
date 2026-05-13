@@ -87,7 +87,7 @@
 			</div>
 			<p class="text-muted text-xs mt-8 border-t border-white/10 pt-6">
 				© {new Date().getFullYear()} Dave DeYoung · Holland Charter Township Trustee · deyoungdisclosure.com
-				<span class="block mt-1 text-white/20">Built and maintained by Steven Willard, Holland Township resident</span>
+				<span class="block mt-1 text-white/20">Built and maintained by Steven Willard II, Holland Township resident</span>
 			</p>
 		</div>
 	</footer>
