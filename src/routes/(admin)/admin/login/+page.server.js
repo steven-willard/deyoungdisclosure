@@ -12,11 +12,8 @@ export const actions = {
 			.split(',')
 			.map(e => e.trim().toLowerCase());
 
-		console.log('[login] attempt:', email, '| authorized:', adminEmails);
-
 		// Always return success — no email enumeration
 		if (!adminEmails.includes(email)) {
-			console.log('[login] email not in ADMIN_EMAILS, returning early');
 			return { sent: true };
 		}
 
@@ -30,9 +27,7 @@ export const actions = {
 
 		const magicLink = `${url.origin}/api/auth/verify?token=${encodeURIComponent(token)}`;
 
-		console.log('[login] sending magic link to:', email);
-
-		const resendRes = await fetch('https://api.resend.com/emails', {
+		await fetch('https://api.resend.com/emails', {
 			method: 'POST',
 			headers: {
 				'Authorization': `Bearer ${platform.env.RESEND_API_KEY}`,
@@ -49,9 +44,6 @@ export const actions = {
 				`
 			})
 		});
-
-		const resendBody = await resendRes.json();
-		console.log('[login] Resend response:', resendRes.status, JSON.stringify(resendBody));
 
 		return { sent: true };
 	}
