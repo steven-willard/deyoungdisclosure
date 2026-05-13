@@ -8,6 +8,7 @@ declare global {
 				DB: D1Database;
 				SESSION_SECRET: string;
 				ADMIN_EMAILS: string;
+				OWNER_EMAIL: string;
 				RESEND_API_KEY: string;
 			};
 		}

@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
-	default: async ({ request, platform, locals }) => {
+	default: async ({ request, platform }) => {
 		const data = await request.formData();
 
 		const title = data.get('title')?.toString().trim();
@@ -14,24 +14,24 @@ export const actions = {
 			return fail(400, { error: 'Title and body are required.' });
 		}
 
-		// Get user from layout data (session already validated by layout guard)
 		const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
 		const { getSession } = await import('$lib/server/auth.js');
 		const session = await getSession(platform.env.DEYOUNG_KV, sessionId);
 		const createdBy = session?.email ?? 'admin';
+
+		const ownerEmail = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+		const isDave = ownerEmail && createdBy === ownerEmail;
+		const state = isDave ? 'published' : 'pending_approval';
 
 		const id = crypto.randomUUID();
 		const now = new Date().toISOString();
 		const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
 
 		const post = {
-			id,
-			title,
-			body,
-			tags,
+			id, title, body, tags,
 			image_url: imageUrl,
 			platforms,
-			state: 'pending_approval',
+			state,
 			created_by: createdBy,
 			created_at: now,
 			updated_at: now,
@@ -40,20 +40,19 @@ export const actions = {
 
 		await platform.env.DEYOUNG_KV.put(`posts:${id}`, JSON.stringify(post));
 
-		// Also insert into D1
 		try {
 			await platform.env.DB.prepare(
 				`INSERT INTO posts (id, title, body, tags, image_url, platforms, state, created_by, created_at, updated_at, dave_note)
 				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			).bind(
 				id, title, body, JSON.stringify(tags), imageUrl,
-				JSON.stringify(platforms), 'pending_approval', createdBy, now, now, null
+				JSON.stringify(platforms), state, createdBy, now, now, null
 			).run();
 
 			await platform.env.DB.prepare(
 				`INSERT INTO post_transitions (post_id, from_state, to_state, actor, note, transitioned_at)
 				 VALUES (?, ?, ?, ?, ?, ?)`
-			).bind(id, 'draft', 'pending_approval', createdBy, null, now).run();
+			).bind(id, 'draft', state, createdBy, null, now).run();
 		} catch {
 			// D1 not available
 		}
