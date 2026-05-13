@@ -1,6 +1,8 @@
 <script>
-	import '../app.css';
+	import '../../app.css';
 	import { page } from '$app/stores';
+
+	let { children } = $props();
 
 	const navLinks = [
 		{ href: '/', label: 'Home' },
@@ -36,7 +38,7 @@
 
 	<!-- Page content -->
 	<main class="flex-1">
-		<slot />
+		{@render children()}
 	</main>
 
 	<!-- Footer -->

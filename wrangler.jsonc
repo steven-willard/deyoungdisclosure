@@ -4,5 +4,18 @@
 	"assets": {
 		"directory": ".svelte-kit/cloudflare",
 		"not_found_handling": "single-page-application"
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "DEYOUNG_KV",
+			"id": "1bbe32fcaaa64eb782540577f0fb56af"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "deyoung_db",
+			"database_id": "35ec8a2e-0b69-4488-abf8-5ac11cc7ce15"
+		}
+	]
 }
