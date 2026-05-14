@@ -68,13 +68,28 @@ export async function PUT({ request, platform, params }) {
 	return json({ post: updated });
 }
 
-// DELETE /api/posts/:id — soft delete, sets state to 'deleted' for audit trail + resurrection
-export async function DELETE({ request, platform, params }) {
+// DELETE /api/posts/:id
+// Default: soft delete (state → 'deleted'), recoverable, audit trail preserved
+// ?purge=true: hard delete — removes from KV + D1 permanently, use with intent
+export async function DELETE({ request, platform, params, url }) {
 	const denied = requireApiKey(request, platform);
 	if (denied) return denied;
 
 	const raw = await platform.env.DEYOUNG_KV.get(`posts:${params.id}`);
 	if (!raw) return json({ error: 'Not found' }, { status: 404 });
+
+	const purge = url.searchParams.get('purge') === 'true';
+
+	if (purge) {
+		await platform.env.DEYOUNG_KV.delete(`posts:${params.id}`);
+		try {
+			await platform.env.DB.prepare('DELETE FROM post_transitions WHERE post_id = ?').bind(params.id).run();
+			await platform.env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(params.id).run();
+		} catch {
+			// D1 write failed
+		}
+		return json({ purged: true });
+	}
 
 	const existing = JSON.parse(raw);
 	const now = new Date().toISOString();
