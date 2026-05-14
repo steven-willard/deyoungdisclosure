@@ -10,6 +10,7 @@ declare global {
 				ADMIN_EMAILS: string;
 				OWNER_EMAIL: string;
 				RESEND_API_KEY: string;
+				SMM_AI_API_KEY: string;
 			};
 		}
 	}
