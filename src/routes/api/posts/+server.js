@@ -15,6 +15,8 @@ export async function GET({ request, platform, url }) {
 		if (state) {
 			query += ' WHERE state = ?';
 			bindings.push(state);
+		} else {
+			query += " WHERE state != 'deleted'";
 		}
 		query += ' ORDER BY created_at DESC LIMIT ?';
 		bindings.push(limit);

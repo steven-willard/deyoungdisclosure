@@ -68,7 +68,7 @@ export async function PUT({ request, platform, params }) {
 	return json({ post: updated });
 }
 
-// DELETE /api/posts/:id
+// DELETE /api/posts/:id — soft delete, sets state to 'deleted' for audit trail + resurrection
 export async function DELETE({ request, platform, params }) {
 	const denied = requireApiKey(request, platform);
 	if (denied) return denied;
@@ -76,13 +76,25 @@ export async function DELETE({ request, platform, params }) {
 	const raw = await platform.env.DEYOUNG_KV.get(`posts:${params.id}`);
 	if (!raw) return json({ error: 'Not found' }, { status: 404 });
 
-	await platform.env.DEYOUNG_KV.delete(`posts:${params.id}`);
+	const existing = JSON.parse(raw);
+	const now = new Date().toISOString();
+	const prevState = existing.state;
+
+	const updated = { ...existing, state: 'deleted', updated_at: now };
+	await platform.env.DEYOUNG_KV.put(`posts:${params.id}`, JSON.stringify(updated));
 
 	try {
-		await platform.env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(params.id).run();
+		await platform.env.DB.prepare(
+			'UPDATE posts SET state=?, updated_at=? WHERE id=?'
+		).bind('deleted', now, params.id).run();
+
+		await platform.env.DB.prepare(
+			`INSERT INTO post_transitions (post_id, from_state, to_state, actor, note, transitioned_at)
+			 VALUES (?, ?, ?, ?, ?, ?)`
+		).bind(params.id, prevState, 'deleted', 'smm-ai', null, now).run();
 	} catch {
 		// D1 write failed
 	}
 
-	return json({ deleted: true });
+	return json({ deleted: true, post: updated });
 }
