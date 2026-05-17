@@ -4,49 +4,63 @@ Last updated: 2026-05-17
 
 ---
 
+## Immediate
+- [ ] **Purge 3 test posts** — IDs: `4a768904`, `9abd1a9f`, `c9ed9b52` — created for home/posts/individual page testing, clearly labeled [TEST], purge when done validating
+
+---
+
 ## Public Site
 
 ### High Priority
-- [ ] **Home — wire latest 3 posts** — add `+page.server.js` to query D1 for 3 most recent published posts, replace placeholder cards with real data. Show `image_url` if present, styled fallback if not.
-- [ ] **Posts archive — wire real data** — add `+page.server.js` to query D1 for all published posts, replace "CMS coming soon" placeholder with real post cards.
-- [ ] **Individual post pages** — create `src/routes/(public)/posts/[id]/+page.svelte` + `+page.server.js`. Load post from D1 by ID. Render `body` as markdown. Full SEO (title, description, OG tags, BlogPosting JSON-LD).
-- [ ] **Markdown rendering** — install a markdown renderer (e.g. `marked` or `@sveltejs/remark`) and render post `body` on individual post pages and in previews.
+- [x] **Home — wire latest 3 posts** — queries D1 for 3 most recent published posts. Image shown if present, text-only card if not.
+- [x] **Posts archive — wire real data** — queries D1 for all published posts. Live client-side tag filtering derived from actual post data.
+- [x] **Individual post pages** — `/posts/[id]` with full markdown rendering, SEO meta tags, OG tags, BlogPosting JSON-LD.
+- [x] **Markdown rendering** — `marked` installed, rendering server-side on individual post pages with custom dark-theme styles.
 
 ### Medium Priority
-- [ ] **Tag filtering on /posts** — make tag buttons functional, filter displayed posts by selected tag. Tags should be derived from actual post data, not hardcoded.
+- [x] **Tag filtering on /posts** — live reactive filtering, tags derived from real post data, no page reload.
 - [ ] **Sitemap — include post URLs** — update `sitemap.xml/+server.js` to query D1 for published posts and include `/posts/{id}` entries with real `lastmod` dates.
-- [ ] **Social links** — replace placeholder `facebook.com` / `instagram.com` links in nav footer with Dave's real account URLs once confirmed.
+- [ ] **Social links** — replace placeholder `facebook.com` / `instagram.com` links in nav footer with Dave's real account URLs once confirmed (pending Facebook account setup).
 
 ### Low Priority
-- [ ] **OG image per post** — add dynamic Open Graph image support per post (use `image_url` if set, fallback to site default OG image).
-- [ ] **BlogPosting JSON-LD** — add structured data on individual post pages for SEO.
 - [ ] **Related posts** — show 2-3 related posts by tag at bottom of individual post pages.
-- [ ] **Post excerpt on cards** — truncate `body` to ~150 chars for card previews, stripping markdown.
 
 ---
 
 ## Admin Dashboard
 
-- [ ] **Post approval notification email** — when Steven submits a post, email Dave a notification with a preview and link to the dashboard. Currently Dave has to check the dashboard manually.
-- [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Currently reject just changes state. Note should surface to Steven.
-- [ ] **Markdown editor for compose** — replace plain textarea with a simple markdown editor (e.g. CodeMirror or a lightweight MD editor) for compose page.
+- [ ] **Post approval notification email** — when Steven submits a post, email Dave a notification with a preview and link to the dashboard. Route to Steven's email during testing.
+- [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Note should surface to Steven via the skill's status check.
+- [ ] **Markdown editor for compose** — replace plain textarea with a simple markdown editor for compose page.
 - [ ] **Image URL preview** — show a thumbnail preview when an image URL is entered in compose.
 - [ ] **Pagination on inbox + posts** — KV list returns max 1000 keys; add cursor-based pagination before inbox/post history gets large.
+- [ ] **Surface meeting records in compose** — searchable meeting list in admin compose so Dave can insert a YouTube link or quote directly from the D1 meeting index.
 
 ---
 
 ## Infrastructure
 
 - [ ] **Move `_context/` to NAS** — migrate local-only context files to NAS for cross-machine access via pi-home MCP. Mirror structure at `Projects/deyoungdisclosure/context/`.
+- [ ] **Meta Graph API** — wire Facebook + Instagram publishing. When a post is approved, fire the Graph API to post simultaneously. Requires Meta app setup + Dave's page tokens. Blocked on Dave creating Facebook account.
 - [ ] **Cloudflare R2 for images** — when Dave requests it, add R2 bucket for image storage. Update compose + SMM API to accept uploads and return a permanent CDN URL.
-- [ ] **Meta Graph API** — wire Facebook + Instagram publishing. When a post is approved, fire the Graph API to post simultaneously. Requires Meta app setup + page tokens.
-- [ ] **robots.txt** — add `static/robots.txt` allowing all crawlers, referencing sitemap URL.
+- [x] **robots.txt** — present in static/.
+
+---
+
+## Meetings (YouTube Public Record)
+
+- [x] **Scraper** — `scripts/scrape-meetings.ts` scrapes HCT site for all 3 board types, stores transcript segments with offsets and dates.
+- [x] **Summarizer** — `scripts/summarize-meetings.ts` summarizes transcripts via Anthropic API (Haiku), stores highlights with `timestamp_sec` for direct YouTube timestamp links. Kill switch + `--max` flag.
+- [x] **D1 schema + CRUD API** — `meetings` table in D1, full GET/POST/DELETE API at `/api/meetings` and `/api/meetings/:id`. Upsert via ON CONFLICT. Soft + hard delete.
+- [x] **Seeded** — 42 meetings across Board of Trustees (18), Planning Commission (14), ZBA (10) summarized and live in D1.
+- [x] **SMM skill** — `sync-youtube` sub-command documented in skill. Skill can query meetings API for factual grounding and direct timestamp links when drafting posts.
+- [ ] **Meetings page on public site** — simple chronological list of all board meetings with YouTube links. Transparency value-add — these videos are unlisted on YouTube and otherwise hard to find.
 
 ---
 
 ## SMM AI Skill (`/smm`)
 
-- [x] **Meeting sync tooling** — `scrape-meetings.ts`, `summarize-meetings.ts`, `seed-meetings.ts` built and run. 42 meetings (Board of Trustees, Planning Commission, ZBA) scraped, summarized via Anthropic API, and seeded into D1. SMM skill updated with `sync-youtube` sub-command.
+- [x] **Meeting sync tooling** — full pipeline built and seeded. See Meetings section above.
 - [ ] **Post queue workflow** — after building a queue, allow the skill to submit the full batch to the API in sequence with confirmations between each.
 - [ ] **Status check on existing posts** — skill should be able to query pending posts and surface Dave's notes on rejected ones so Steven can iterate.
 - [ ] **Image sourcing** — document and potentially automate image URL sourcing (Unsplash API by tag, or pull from existing social post URLs).
