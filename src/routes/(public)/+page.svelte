@@ -1,5 +1,11 @@
 <script>
 	import SEO from '$lib/SEO.svelte';
+	let { data } = $props();
+	const { posts } = data;
+
+	function formatDate(iso) {
+		return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+	}
 </script>
 
 <SEO
@@ -62,23 +68,30 @@
 		</a>
 	</div>
 
-	<!-- Post cards placeholder — will be populated from CMS -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-		{#each [1, 2, 3] as i}
-			<article class="bg-surface rounded-lg overflow-hidden border border-white/10 hover:border-accent/30 transition-colors group">
-				<div class="aspect-video bg-primary/60 flex items-center justify-center">
-					<span class="text-muted text-xs">Image</span>
-				</div>
-				<div class="p-5">
-					<p class="text-muted text-xs mb-2">May {i}, 2026 · Accountability</p>
-					<h3 class="font-heading text-lg font-semibold text-text group-hover:text-accent transition-colors leading-snug mb-2">
-						Post title coming soon
-					</h3>
-					<p class="text-text/60 text-sm line-clamp-2">
-						Post excerpt will appear here once content is published through the CMS.
-					</p>
-				</div>
-			</article>
-		{/each}
-	</div>
+	{#if posts.length === 0}
+		<p class="text-muted text-sm">No published posts yet.</p>
+	{:else}
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			{#each posts as post}
+				<article class="bg-surface rounded-lg overflow-hidden border border-white/10 hover:border-accent/30 transition-colors group">
+					{#if post.image_url}
+						<img src={post.image_url} alt={post.title} class="aspect-video w-full object-cover" />
+					{:else}
+						<div class="aspect-video bg-primary/60 flex items-center justify-center">
+							<span class="text-muted text-xs">No image</span>
+						</div>
+					{/if}
+					<div class="p-5">
+						<p class="text-muted text-xs mb-2">
+							{formatDate(post.created_at)}{post.tags[0] ? ` · ${post.tags[0]}` : ''}
+						</p>
+						<h3 class="font-heading text-lg font-semibold text-text group-hover:text-accent transition-colors leading-snug mb-2">
+							<a href="/posts/{post.id}">{post.title}</a>
+						</h3>
+						<p class="text-text/60 text-sm line-clamp-2">{post.excerpt}</p>
+					</div>
+				</article>
+			{/each}
+		</div>
+	{/if}
 </section>
