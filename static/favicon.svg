@@ -2,11 +2,6 @@
   <!-- Background -->
   <rect width="64" height="64" rx="10" fill="#0f1f2e"/>
 
-  <!-- Light rays -->
-  <polygon points="32,16 6,4 18,16" fill="#c9a84c" opacity="0.5"/>
-  <polygon points="32,16 58,4 46,16" fill="#c9a84c" opacity="0.5"/>
-  <polygon points="32,16 32,2 38,16" fill="#c9a84c" opacity="0.35"/>
-
   <!-- Tower -->
   <polygon points="21,52 43,52 38,24 26,24" fill="#c9a84c"/>
 
