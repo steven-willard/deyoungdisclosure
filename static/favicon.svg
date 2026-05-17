@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="10" fill="#0f1f2e"/>
+
+  <!-- Light rays -->
+  <polygon points="32,16 6,4 18,16" fill="#c9a84c" opacity="0.5"/>
+  <polygon points="32,16 58,4 46,16" fill="#c9a84c" opacity="0.5"/>
+  <polygon points="32,16 32,2 38,16" fill="#c9a84c" opacity="0.35"/>
+
+  <!-- Tower -->
+  <polygon points="21,52 43,52 38,24 26,24" fill="#c9a84c"/>
+
+  <!-- Horizontal stripe -->
+  <rect x="21" y="38" width="22" height="4" fill="#0f1f2e" opacity="0.35"/>
+
+  <!-- Lantern room -->
+  <rect x="24" y="16" width="16" height="10" rx="2" fill="#c9a84c"/>
+
+  <!-- Lantern glow -->
+  <rect x="26" y="18" width="12" height="6" rx="1" fill="#fff" opacity="0.6"/>
+
+  <!-- Base -->
+  <rect x="17" y="52" width="30" height="4" rx="2" fill="#c9a84c"/>
+
+  <!-- Water line -->
+  <path d="M12 58 Q20 55 32 58 Q44 61 52 58" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.5"/>
+</svg>
