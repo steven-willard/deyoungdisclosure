@@ -76,10 +76,6 @@
 				<article class="bg-surface rounded-lg overflow-hidden border border-white/10 hover:border-accent/30 transition-colors group">
 					{#if post.image_url}
 						<img src={post.image_url} alt={post.title} class="aspect-video w-full object-cover" />
-					{:else}
-						<div class="aspect-video bg-primary/60 flex items-center justify-center">
-							<span class="text-muted text-xs">No image</span>
-						</div>
 					{/if}
 					<div class="p-5">
 						<p class="text-muted text-xs mb-2">
