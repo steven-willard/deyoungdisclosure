@@ -1,6 +1,6 @@
 # DeYoung Disclosure — TODO
 
-Last updated: 2026-05-13
+Last updated: 2026-05-17
 
 ---
 
@@ -46,6 +46,7 @@ Last updated: 2026-05-13
 
 ## SMM AI Skill (`/smm`)
 
+- [x] **Meeting sync tooling** — `scrape-meetings.ts`, `summarize-meetings.ts`, `seed-meetings.ts` built and run. 42 meetings (Board of Trustees, Planning Commission, ZBA) scraped, summarized via Anthropic API, and seeded into D1. SMM skill updated with `sync-youtube` sub-command.
 - [ ] **Post queue workflow** — after building a queue, allow the skill to submit the full batch to the API in sequence with confirmations between each.
 - [ ] **Status check on existing posts** — skill should be able to query pending posts and surface Dave's notes on rejected ones so Steven can iterate.
 - [ ] **Image sourcing** — document and potentially automate image URL sourcing (Unsplash API by tag, or pull from existing social post URLs).
