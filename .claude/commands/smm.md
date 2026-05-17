@@ -130,6 +130,54 @@ any state → deleted            (soft delete, recoverable via PUT)
 any state → purged             (DELETE ?purge=true, permanent)
 ```
 
+### 6. Sync YouTube Meetings (`sync-youtube`)
+
+Scrape the Holland Charter Township site for new meeting recordings, summarize them via Anthropic API, and push to D1.
+
+**Load keys from `.env.local`:**
+Parse `SMM_AI_API_KEY` and `YOUTUBE_SUMMARIZER_API_KEY` from `.env.local`. Both are required.
+
+**Workflow:**
+
+1. **Scrape** — run `npx tsx scripts/scrape-meetings.ts` to refresh `meetings-output.json` with latest meetings from the township site
+2. **Summarize** — run with keys set:
+   ```
+   YOUTUBE_SUMMARIZER_API_KEY=<key> npx tsx scripts/summarize-meetings.ts --max 5
+   ```
+   Repeat until no unsummarized meetings remain (the script will say so).
+3. **Seed** — push all summarized meetings to D1:
+   ```
+   DEYOUNG_API_KEY=<SMM_AI_API_KEY> npx tsx scripts/seed-meetings.ts
+   ```
+
+**Query meetings from D1 (for post context):**
+```
+GET /api/meetings
+GET /api/meetings?type=Board+of+Trustees
+GET /api/meetings?type=Planning+Commission
+GET /api/meetings?type=Zoning+Board+of+Appeals
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+Response shape:
+```json
+{ "meetings": [{ "video_id", "type", "date", "youtube_url", "hct_url", "summary", "highlights": [{ "timestamp_sec", "topic", "quote" }] }] }
+```
+
+Use meeting summaries and highlights for factual grounding when drafting posts. Link directly to a meeting moment with: `https://www.youtube.com/watch?v=<video_id>&t=<timestamp_sec>`
+
+**Get a single meeting:**
+```
+GET /api/meetings/<video_id>
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+**Soft delete a meeting (disappeared from township site):**
+```
+DELETE /api/meetings/<video_id>
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
 ---
 
 ## Output Standards
