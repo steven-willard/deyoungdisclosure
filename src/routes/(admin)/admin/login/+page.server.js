@@ -25,7 +25,7 @@ export const actions = {
 			{ expirationTtl: 60 * 15 }
 		);
 
-		const magicLink = `${url.origin}/api/auth/verify?token=${encodeURIComponent(token)}`;
+		const magicLink = `${url.origin}/admin/login/confirm?token=${encodeURIComponent(token)}`;
 
 		await fetch('https://api.resend.com/emails', {
 			method: 'POST',
