@@ -122,9 +122,11 @@ const client = new Anthropic({ apiKey });
 function formatSegmentsForPrompt(segments: { text: string; offset: number }[]): string {
   return segments
     .map(s => {
-      const h = Math.floor(s.offset / 3600);
-      const m = Math.floor((s.offset % 3600) / 60);
-      const sec = s.offset % 60;
+      // offset is in milliseconds — convert to seconds first
+      const totalSec = Math.floor(s.offset / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const sec = totalSec % 60;
       const ts = h > 0
         ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
         : `${m}:${String(sec).padStart(2, "0")}`;
@@ -152,7 +154,7 @@ Return JSON with this exact shape:
   ]
 }
 
-highlights: include 5-10 of the most significant moments (votes, decisions, heated discussion, public comment). timestamp_sec should be the offset of the segment where the moment occurs.
+highlights: include 5-10 of the most significant moments (votes, decisions, heated discussion, public comment). timestamp_sec must be an integer number of SECONDS matching the [M:SS] or [H:MM:SS] timestamp shown in the transcript for that segment.
 
 TRANSCRIPT:
 ${formatted}`;
