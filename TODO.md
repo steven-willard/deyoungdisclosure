@@ -1,6 +1,6 @@
 # DeYoung Disclosure — TODO
 
-Last updated: 2026-05-18
+Last updated: 2026-05-19
 
 ---
 
@@ -32,10 +32,10 @@ Last updated: 2026-05-18
 - [x] **Contact form + inbox** — fully operational. Constituent messages stored in KV, Dave notified via Resend at dave@davedeyoung.com with full message. Admin inbox at /admin/inbox shows permanent archive with expand/delete. Delete is session-protected with confirm dialog.
 - [ ] **Post approval notification email** — when Steven submits a post, email Dave a notification with a preview and link to the dashboard. Route to Steven's email during testing.
 - [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Note should surface to Steven via the skill's status check.
-- [ ] **Markdown editor for compose** — replace plain textarea with a simple markdown editor for compose page.
-- [ ] **Image URL preview** — show a thumbnail preview when an image URL is entered in compose.
+- [x] **Markdown editor for compose** — live split-pane editor with real-time preview using marked.
+- [x] **Surface meeting records in compose** — searchable/filterable meeting panel at bottom of compose. Expand to see highlights, click to inject blockquote + timestamp link or plain meeting link at cursor position.
+- [ ] **Image URL preview** — show a thumbnail preview when an image URL is entered in compose. If URL is a webpage, fetch OG image instead.
 - [ ] **Pagination on inbox + posts** — KV list returns max 1000 keys; add cursor-based pagination before inbox/post history gets large.
-- [ ] **Surface meeting records in compose** — searchable meeting list in admin compose so Dave can insert a YouTube link or quote directly from the D1 meeting index.
 
 ---
 
