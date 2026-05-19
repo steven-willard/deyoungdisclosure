@@ -51,9 +51,14 @@
 		}, 0);
 	}
 
+	// Timestamps stored inconsistently: > 10800 = ms (divide by 1000), else already seconds
+	function toSec(ts) {
+		return ts > 10800 ? Math.floor(ts / 1000) : ts;
+	}
+
 	function insertHighlight(meeting, highlight) {
 		const date = meeting.date ? new Date(meeting.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : meeting.type;
-		const link = `${meeting.youtube_url}&t=${Math.floor(highlight.timestamp_sec / 1000)}`;
+		const link = `${meeting.youtube_url}&t=${toSec(highlight.timestamp_sec)}`;
 		const md = `> "${highlight.quote}"\n> — [${meeting.type}, ${date}](${link})`;
 		insertAtCursor(md);
 	}
