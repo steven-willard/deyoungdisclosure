@@ -1,6 +1,6 @@
 # DeYoung Disclosure — TODO
 
-Last updated: 2026-05-17
+Last updated: 2026-05-18
 
 ---
 
@@ -29,6 +29,7 @@ Last updated: 2026-05-17
 
 ## Admin Dashboard
 
+- [x] **Contact form + inbox** — fully operational. Constituent messages stored in KV, Dave notified via Resend at dave@davedeyoung.com with full message. Admin inbox at /admin/inbox shows permanent archive with expand/delete. Delete is session-protected with confirm dialog.
 - [ ] **Post approval notification email** — when Steven submits a post, email Dave a notification with a preview and link to the dashboard. Route to Steven's email during testing.
 - [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Note should surface to Steven via the skill's status check.
 - [ ] **Markdown editor for compose** — replace plain textarea with a simple markdown editor for compose page.
