@@ -1,4 +1,6 @@
 <script>
+	import { marked } from 'marked';
+
 	let { data } = $props();
 	const { meetings } = data;
 
@@ -87,7 +89,7 @@
 									{#if meeting.summary}
 										<div class="px-5 py-4 border-b border-white/5">
 											<p class="text-xs font-medium text-accent mb-2 uppercase tracking-wide">Summary</p>
-											<div class="text-text/70 text-sm leading-relaxed whitespace-pre-line">{meeting.summary}</div>
+											<div class="post-body text-sm">{@html marked.parse(meeting.summary ?? '')}</div>
 										</div>
 									{/if}
 
@@ -130,3 +132,14 @@
 	{/if}
 
 </div>
+
+<style>
+	.post-body :global(h1), .post-body :global(h2), .post-body :global(h3) {
+		font-weight: 700; color: #f0f0f0; margin: 1rem 0 0.5rem;
+	}
+	.post-body :global(p) { color: rgba(240,240,240,0.7); line-height: 1.7; margin-bottom: 0.75rem; }
+	.post-body :global(strong) { color: #f0f0f0; }
+	.post-body :global(ul), .post-body :global(ol) { color: rgba(240,240,240,0.7); padding-left: 1.5rem; margin-bottom: 0.75rem; line-height: 1.7; }
+	.post-body :global(ul) { list-style-type: disc; }
+	.post-body :global(ol) { list-style-type: decimal; }
+</style>
