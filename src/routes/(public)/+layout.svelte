@@ -7,6 +7,7 @@
 	const navLinks = [
 		{ href: '/', label: 'Home' },
 		{ href: '/posts', label: 'Posts' },
+		{ href: '/meetings', label: 'Meetings' },
 		{ href: '/about', label: 'About' },
 		{ href: '/contact', label: 'Contact' }
 	];
@@ -15,9 +16,9 @@
 <div class="min-h-screen flex flex-col bg-primary text-text">
 
 	<!-- Nav -->
-	<header class="sticky top-0 z-50 bg-primary/95 backdrop-blur border-b border-white/10">
+	<header class="sticky top-0 z-50 border-b border-white/10" style="background: linear-gradient(135deg, #060f1a 0%, #0f1f2e 50%, #0a1520 100%);">
 		<nav class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-			<a href="/" class="font-heading font-bold text-lg text-accent tracking-wide">
+			<a href="/" class="font-heading font-bold text-lg tracking-wide" style="background: linear-gradient(90deg, #c9a84c, #f0d080); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
 				Dave DeYoung
 			</a>
 			<ul class="flex items-center gap-6">
@@ -26,7 +27,7 @@
 						<a
 							href={link.href}
 							class="text-sm font-medium transition-colors hover:text-accent
-								{$page.url.pathname === link.href ? 'text-accent' : 'text-text/70'}"
+								{$page.url.pathname === link.href || ($page.url.pathname.startsWith(link.href) && link.href !== '/') ? 'text-accent' : 'text-text/70'}"
 						>
 							{link.label}
 						</a>

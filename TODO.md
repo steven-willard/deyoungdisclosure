@@ -55,7 +55,7 @@ Last updated: 2026-05-19
 - [x] **D1 schema + CRUD API** — `meetings` table in D1, full GET/POST/DELETE API at `/api/meetings` and `/api/meetings/:id`. Upsert via ON CONFLICT. Soft + hard delete.
 - [x] **Seeded** — 42 meetings across Board of Trustees (18), Planning Commission (14), ZBA (10) summarized and live in D1.
 - [x] **SMM skill** — `sync-youtube` sub-command documented in skill. Skill can query meetings API for factual grounding and direct timestamp links when drafting posts.
-- [ ] **Meetings page on public site** — simple chronological list of all board meetings with YouTube links. Transparency value-add — these videos are unlisted on YouTube and otherwise hard to find.
+- [x] **Meetings page on public site** — `/meetings` grouped by board type, each with YouTube link, expandable summary and key moment highlights with direct timestamp links.
 
 ---
 
