@@ -41,17 +41,15 @@
 				</a>
 			{/each}
 		</nav>
-		{#if data?.user}
-			<div class="px-5 py-4 border-t border-white/10">
-				<p class="text-xs text-muted truncate mb-2">{data.user.email}</p>
-				<button
-					onclick={logout}
-					class="text-xs text-red-400 hover:text-red-300 transition-colors"
-				>
+		<div class="px-5 py-4 border-t border-white/10 space-y-2">
+			<a href="/" class="block text-xs text-muted hover:text-text transition-colors">← Public site</a>
+			{#if data?.user}
+				<p class="text-xs text-muted truncate">{data.user.email}</p>
+				<button onclick={logout} class="text-xs text-red-400 hover:text-red-300 transition-colors">
 					Sign out
 				</button>
-			</div>
-		{/if}
+			{/if}
+		</div>
 	</aside>
 
 	<!-- Main content -->
