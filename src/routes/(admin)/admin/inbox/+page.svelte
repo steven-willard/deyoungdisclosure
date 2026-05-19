@@ -1,6 +1,6 @@
 <script>
 	let { data } = $props();
-	let { messages } = $derived(data);
+	let messages = $state(data.messages);
 	let expanded = $state(new Set());
 
 	function toggle(id) {
@@ -8,6 +8,12 @@
 		if (next.has(id)) next.delete(id);
 		else next.add(id);
 		expanded = next;
+	}
+
+	async function deleteMessage(id) {
+		if (!confirm('Delete this message? This cannot be undone.')) return;
+		const res = await fetch(`/api/contact?key=${encodeURIComponent(id)}`, { method: 'DELETE' });
+		if (res.ok) messages = messages.filter(m => m.id !== id);
 	}
 </script>
 
@@ -35,12 +41,17 @@
 				{#if expanded.has(msg.id)}
 					<div class="px-5 pb-5 border-t border-white/10 pt-4">
 						<p class="text-text/80 text-sm whitespace-pre-wrap">{msg.message}</p>
-						<a
-							href="mailto:{msg.email}"
-							class="inline-block mt-4 text-accent text-sm hover:underline"
-						>
-							Reply to {msg.email} →
-						</a>
+						<div class="flex items-center justify-between mt-4">
+							<a href="mailto:{msg.email}" class="text-accent text-sm hover:underline">
+								Reply to {msg.email} →
+							</a>
+							<button
+								onclick={() => deleteMessage(msg.id)}
+								class="text-red-400 text-xs hover:text-red-300 transition-colors"
+							>
+								Delete
+							</button>
+						</div>
 					</div>
 				{/if}
 			</div>

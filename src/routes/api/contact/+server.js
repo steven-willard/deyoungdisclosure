@@ -68,3 +68,19 @@ export async function POST({ request, platform }) {
 	// Always return success — message is saved to KV regardless of email
 	return json({ ok: true });
 }
+
+// DELETE /api/contact?key=contact:timestamp_uuid
+// Protected by session cookie (admin only)
+export async function DELETE({ url, platform, cookies }) {
+	const { getSession } = await import('$lib/server/auth.js');
+	const session = await getSession(cookies, platform);
+	if (!session) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const key = url.searchParams.get('key');
+	if (!key?.startsWith('contact:')) {
+		return json({ error: 'Invalid key' }, { status: 400 });
+	}
+
+	await platform.env.DEYOUNG_KV.delete(key);
+	return json({ deleted: true });
+}
