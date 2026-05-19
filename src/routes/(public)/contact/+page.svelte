@@ -16,6 +16,7 @@
 				body: JSON.stringify({ name, email, message })
 			});
 			status = res.ok ? 'success' : 'error';
+			if (res.ok) window.scrollTo({ top: 0, behavior: 'smooth' });
 		} catch {
 			status = 'error';
 		}

@@ -73,7 +73,8 @@ export async function POST({ request, platform }) {
 // Protected by session cookie (admin only)
 export async function DELETE({ url, platform, cookies }) {
 	const { getSession } = await import('$lib/server/auth.js');
-	const session = await getSession(cookies, platform);
+	const sessionId = cookies.get('session');
+	const session = await getSession(platform.env.DEYOUNG_KV, sessionId);
 	if (!session) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	const key = url.searchParams.get('key');
