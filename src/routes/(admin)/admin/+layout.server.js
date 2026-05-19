@@ -3,7 +3,7 @@ import { getSession } from '$lib/server/auth.js';
 
 export async function load({ cookies, platform, url }) {
 	// Allow login page to pass through
-	if (url.pathname === '/admin/login') return {};
+	if (url.pathname.startsWith('/admin/login')) return {};
 
 	const sessionId = cookies.get('session');
 	const session = await getSession(platform.env.DEYOUNG_KV, sessionId);
