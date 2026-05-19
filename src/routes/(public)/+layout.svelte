@@ -11,6 +11,12 @@
 		{ href: '/about', label: 'About' },
 		{ href: '/contact', label: 'Contact' }
 	];
+
+	let mobileOpen = $state(false);
+
+	function isActive(href) {
+		return $page.url.pathname === href || ($page.url.pathname.startsWith(href) && href !== '/');
+	}
 </script>
 
 <div class="min-h-screen flex flex-col bg-primary text-text">
@@ -18,23 +24,63 @@
 	<!-- Nav -->
 	<header class="sticky top-0 z-50 border-b border-white/10" style="background: linear-gradient(135deg, #060f1a 0%, #0f1f2e 50%, #0a1520 100%);">
 		<nav class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-			<a href="/" class="font-heading font-bold text-lg tracking-wide" style="background: linear-gradient(90deg, #c9a84c, #f0d080); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+			<a href="/" class="font-heading font-bold text-lg tracking-wide shrink-0" style="background: linear-gradient(90deg, #c9a84c, #f0d080); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
 				Dave DeYoung
 			</a>
-			<ul class="flex items-center gap-6">
+
+			<!-- Desktop links -->
+			<ul class="hidden sm:flex items-center gap-6">
 				{#each navLinks as link}
 					<li>
 						<a
 							href={link.href}
 							class="text-sm font-medium transition-colors hover:text-accent
-								{$page.url.pathname === link.href || ($page.url.pathname.startsWith(link.href) && link.href !== '/') ? 'text-accent' : 'text-text/70'}"
+								{isActive(link.href) ? 'text-accent' : 'text-text/70'}"
 						>
 							{link.label}
 						</a>
 					</li>
 				{/each}
 			</ul>
+
+			<!-- Mobile hamburger -->
+			<button
+				type="button"
+				class="sm:hidden text-text/70 hover:text-text transition-colors p-1"
+				aria-label="Toggle menu"
+				onclick={() => mobileOpen = !mobileOpen}
+			>
+				{#if mobileOpen}
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				{:else}
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+					</svg>
+				{/if}
+			</button>
 		</nav>
+
+		<!-- Mobile dropdown -->
+		{#if mobileOpen}
+			<div class="sm:hidden border-t border-white/10 px-6 py-3" style="background: linear-gradient(135deg, #060f1a 0%, #0f1f2e 100%);">
+				<ul class="flex flex-col gap-1">
+					{#each navLinks as link}
+						<li>
+							<a
+								href={link.href}
+								onclick={() => mobileOpen = false}
+								class="block py-2.5 text-sm font-medium transition-colors hover:text-accent
+									{isActive(link.href) ? 'text-accent' : 'text-text/70'}"
+							>
+								{link.label}
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	</header>
 
 	<!-- Page content -->
