@@ -53,7 +53,7 @@
 
 	function insertHighlight(meeting, highlight) {
 		const date = meeting.date ? new Date(meeting.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : meeting.type;
-		const link = `${meeting.youtube_url}&t=${highlight.timestamp_sec}`;
+		const link = `${meeting.youtube_url}&t=${Math.floor(highlight.timestamp_sec / 1000)}`;
 		const md = `> "${highlight.quote}"\n> — [${meeting.type}, ${date}](${link})`;
 		insertAtCursor(md);
 	}

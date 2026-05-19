@@ -12,13 +12,14 @@
 		return isNaN(d) ? dateStr : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 	}
 
-	function timestampUrl(youtubeUrl, sec) {
-		return `${youtubeUrl}&t=${sec}`;
+	function timestampUrl(youtubeUrl, ms) {
+		return `${youtubeUrl}&t=${Math.floor(ms / 1000)}`;
 	}
 
-	function formatTimestamp(sec) {
-		const m = Math.floor(sec / 60);
-		const s = sec % 60;
+	function formatTimestamp(ms) {
+		const totalSec = Math.floor(ms / 1000);
+		const m = Math.floor(totalSec / 60);
+		const s = totalSec % 60;
 		return `${m}:${String(s).padStart(2, '0')}`;
 	}
 
