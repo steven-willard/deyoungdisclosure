@@ -1,3 +1,5 @@
+import { normalizeHighlightTimestamps } from '$lib/server/meetings.js';
+
 export async function load({ platform }) {
 	try {
 		const result = await platform.env.DB.prepare(
@@ -5,12 +7,12 @@ export async function load({ platform }) {
 			 FROM meetings WHERE deleted_at IS NULL ORDER BY date DESC`
 		).all();
 
-		const meetings = (result.results ?? []).map(m => ({
+		const raw = (result.results ?? []).map(m => ({
 			...m,
 			highlights: JSON.parse(m.highlights ?? '[]')
 		})).sort((a, b) => new Date(b.date ?? 0) - new Date(a.date ?? 0));
 
-		return { meetings };
+		return { meetings: normalizeHighlightTimestamps(raw) };
 	} catch {
 		return { meetings: [] };
 	}

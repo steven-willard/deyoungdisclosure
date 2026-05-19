@@ -12,18 +12,11 @@
 		return isNaN(d) ? dateStr : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 	}
 
-	// Timestamps stored inconsistently: large values are ms, small are already seconds.
-	// No meeting exceeds 3 hours (10800s), so anything above that must be ms.
-	function toSec(ts) {
-		return ts > 10800 ? Math.floor(ts / 1000) : ts;
+	function timestampUrl(youtubeUrl, sec) {
+		return `${youtubeUrl}&t=${sec}`;
 	}
 
-	function timestampUrl(youtubeUrl, ts) {
-		return `${youtubeUrl}&t=${toSec(ts)}`;
-	}
-
-	function formatTimestamp(ts) {
-		const sec = toSec(ts);
+	function formatTimestamp(sec) {
 		const m = Math.floor(sec / 60);
 		const s = sec % 60;
 		return `${m}:${String(s).padStart(2, '0')}`;
