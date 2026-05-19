@@ -40,7 +40,7 @@ export async function POST({ request, platform }) {
 			},
 			body: JSON.stringify({
 				from: 'noreply@deyoungdisclosure.com',
-				to: 'rockerw@live.com',
+				to: 'dave@davedeyoung.com',
 				subject: `New message from ${cleanName}`,
 				html: `
 					<p style="font-family:sans-serif;color:#333;">
