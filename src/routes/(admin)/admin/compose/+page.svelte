@@ -182,10 +182,11 @@
 			<div class="space-y-2 max-h-96 overflow-y-auto pr-1">
 				{#each filteredMeetings as meeting}
 					<div class="bg-surface border border-white/10 rounded-lg overflow-hidden">
-						<button
-							type="button"
+						<div
+							role="button" tabindex="0"
 							onclick={() => expandedMeeting = expandedMeeting === meeting.video_id ? null : meeting.video_id}
-							class="w-full text-left px-4 py-3 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+							onkeydown={(e) => e.key === 'Enter' && (expandedMeeting = expandedMeeting === meeting.video_id ? null : meeting.video_id)}
+							class="w-full text-left px-4 py-3 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors cursor-pointer"
 						>
 							<div>
 								<span class="text-text text-sm font-medium">{meeting.type}</span>
@@ -201,7 +202,7 @@
 								</button>
 								<span class="text-muted text-xs">{expandedMeeting === meeting.video_id ? '▲' : '▼'}</span>
 							</div>
-						</button>
+						</div>
 
 						{#if expandedMeeting === meeting.video_id}
 							<div class="border-t border-white/10 divide-y divide-white/5">
