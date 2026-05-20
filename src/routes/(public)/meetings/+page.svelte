@@ -56,8 +56,12 @@
 				<div class="space-y-3">
 					{#each group as meeting}
 						<div class="bg-surface border border-white/10 rounded-lg overflow-hidden">
-							<!-- Meeting header row -->
-							<div class="px-5 py-4 flex items-center justify-between gap-4">
+							<!-- Meeting header row — full row is clickable except the YouTube link -->
+							<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+							<div
+								class="px-5 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors"
+								onclick={() => toggle(meeting.video_id)}
+							>
 								<div class="flex items-center gap-4 min-w-0">
 									<div>
 										<p class="text-text font-medium text-sm">{formatDate(meeting.date)}</p>
@@ -65,27 +69,28 @@
 									</div>
 								</div>
 								<div class="flex items-center gap-3 shrink-0">
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<a
 										href={meeting.youtube_url}
 										target="_blank"
 										rel="noopener noreferrer"
 										class="text-xs px-3 py-1.5 bg-accent/10 border border-accent/30 text-accent rounded hover:bg-accent/20 transition-colors"
+										onclick={(e) => e.stopPropagation()}
 									>
 										Watch on YouTube →
 									</a>
-									<button
-										type="button"
-										onclick={() => toggle(meeting.video_id)}
-										class="text-xs text-muted hover:text-text transition-colors"
-									>
+									<span class="text-xs text-muted">
 										{expanded[meeting.video_id] ? '▲ Less' : '▼ Summary'}
-									</button>
+									</span>
 								</div>
 							</div>
 
 							<!-- Expanded: summary + highlights -->
 							{#if expanded[meeting.video_id]}
 								<div class="border-t border-white/10">
+									<p class="px-5 pt-3 pb-1 text-xs text-muted/60 italic">
+										AI-generated summary and highlights from auto-captions. Errors are possible — verify against the recording.
+									</p>
 									{#if meeting.summary}
 										<div class="px-5 py-4 border-b border-white/5">
 											<p class="text-xs font-medium text-accent mb-2 uppercase tracking-wide">Summary</p>
