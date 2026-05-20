@@ -194,20 +194,37 @@ Return JSON with this exact shape:
 
 highlights: include 5-10 of the most significant moments (votes, decisions, heated discussion, public comment).
 The quote must be a verbatim or near-verbatim phrase from the transcript text — it will be used to locate the exact timestamp automatically.
+IMPORTANT: Do not use double-quote characters inside any string value. If a quote contains speech, use single quotes or rephrase to avoid nesting quotes.
 
 TRANSCRIPT:
 ${formatted}`;
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
   });
 
   const raw = response.content[0].type === "text" ? response.content[0].text : "";
-  const text = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
-  const parsed: { summary: string; highlights: { topic: string; quote: string }[] } = JSON.parse(text);
+  let text = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+
+  // If JSON is malformed, ask Claude to repair it
+  let parsed: { summary: string; highlights: { topic: string; quote: string }[] };
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    console.warn("  JSON parse failed — asking Claude to repair...");
+    const fixRes = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4096,
+      system: "You repair malformed JSON. Return only valid JSON with no markdown fences or explanation. Escape any double-quote characters inside string values as \\\".",
+      messages: [{ role: "user", content: `Fix this malformed JSON:\n\n${text}` }],
+    });
+    const fixedRaw = fixRes.content[0].type === "text" ? fixRes.content[0].text : "";
+    text = fixedRaw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+    parsed = JSON.parse(text);
+  }
 
   // Derive accurate timestamps from quote matching against actual segments
   const highlights: Highlight[] = parsed.highlights.map(h => ({
