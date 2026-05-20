@@ -33,6 +33,11 @@ export const actions = {
 			return fail(400, { error: 'Title and body are required.' });
 		}
 
+		const needsSocialCopy = platforms.includes('Facebook') || platforms.includes('Instagram');
+		if (needsSocialCopy && !socialCopy) {
+			return fail(400, { error: 'Social copy is required when posting to Facebook or Instagram.' });
+		}
+
 		const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
 		const { getSession } = await import('$lib/server/auth.js');
 		const session = await getSession(platform.env.DEYOUNG_KV, sessionId);

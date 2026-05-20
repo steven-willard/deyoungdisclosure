@@ -127,6 +127,39 @@
 		insertAtCursor(md);
 	}
 
+	// Client-side validation
+	let submitError = $state('');
+	function handleSubmit(e) {
+		if (showSocialCopy && !socialCopy.trim()) {
+			e.preventDefault();
+			submitError = 'Social copy is required when Facebook or Instagram is selected.';
+			document.getElementById('social_copy')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		} else {
+			submitError = '';
+		}
+	}
+
+	// Strip markdown to plain text for social copy starting point
+	function stripMarkdown(md) {
+		return md
+			.replace(/```[\s\S]*?```/g, '')
+			.replace(/`([^`]+)`/g, '$1')
+			.replace(/^#{1,6}\s+/gm, '')
+			.replace(/\*\*(.+?)\*\*/gs, '$1')
+			.replace(/\*(.+?)\*/gs, '$1')
+			.replace(/\[(.+?)\]\(.+?\)/g, '$1')
+			.replace(/^>\s*/gm, '')
+			.replace(/^[-*+]\s+/gm, '')
+			.replace(/^\d+\.\s+/gm, '')
+			.replace(/^---+$/gm, '')
+			.replace(/\n{3,}/g, '\n\n')
+			.trim();
+	}
+
+	function convertToSocialCopy() {
+		socialCopy = stripMarkdown(body);
+	}
+
 	const TOOLBAR = [
 		{ label: 'B', title: 'Bold', action: () => wrapSelection('**', '**', 'bold text'), style: 'font-bold' },
 		{ label: 'I', title: 'Italic', action: () => wrapSelection('*', '*', 'italic text'), style: 'italic' },
@@ -149,7 +182,13 @@
 {/if}
 
 <div class="max-w-6xl space-y-6">
-	<form method="POST" use:enhance class="space-y-6">
+	{#if submitError}
+		<div class="mb-4 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+			<p class="text-red-400 text-sm">{submitError}</p>
+		</div>
+	{/if}
+
+	<form method="POST" use:enhance onsubmit={handleSubmit} class="space-y-6">
 
 		<!-- Title -->
 		<div class="max-w-2xl">
@@ -161,23 +200,9 @@
 			/>
 		</div>
 
-		<!-- Body — split pane with toolbar -->
+		<!-- Body — split pane with toolbar below editor -->
 		<div>
 			<label class="block text-sm font-medium text-text/70 mb-2">Body</label>
-
-			<!-- Toolbar -->
-			<div class="flex flex-wrap gap-1 mb-2 p-2 bg-surface border border-white/10 rounded-t border-b-0">
-				{#each TOOLBAR as btn}
-					<button
-						type="button"
-						title={btn.title}
-						onclick={btn.action}
-						class="px-2 py-1 rounded text-xs text-text/70 hover:bg-white/10 hover:text-text transition-colors font-mono {btn.style ?? ''}"
-					>
-						{btn.label}
-					</button>
-				{/each}
-			</div>
 
 			<div class="grid grid-cols-2 gap-4">
 				<div>
@@ -188,9 +213,22 @@
 						name="body"
 						required
 						rows="16"
-						class="w-full bg-surface border border-white/20 rounded-b px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y font-mono text-sm"
+						class="w-full bg-surface border border-white/20 rounded px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y font-mono text-sm"
 						placeholder="Post content — markdown supported..."
 					></textarea>
+					<!-- Toolbar -->
+					<div class="flex flex-wrap gap-1 mt-2 p-2 bg-surface border border-white/10 rounded">
+						{#each TOOLBAR as btn}
+							<button
+								type="button"
+								title={btn.title}
+								onclick={btn.action}
+								class="px-2 py-1 rounded text-xs text-text/70 hover:bg-white/10 hover:text-text transition-colors font-mono {btn.style ?? ''}"
+							>
+								{btn.label}
+							</button>
+						{/each}
+					</div>
 				</div>
 				<div>
 					<p class="text-xs text-muted mb-1">Preview</p>
@@ -259,19 +297,38 @@
 		<!-- Social Copy — shown when Facebook or Instagram is selected -->
 		{#if showSocialCopy}
 			<div class="max-w-2xl">
-				<label for="social_copy" class="block text-sm font-medium text-text/70 mb-1">
-					Social Copy
-					<span class="text-muted font-normal">(plain text — sent to Facebook/Instagram)</span>
-				</label>
-				<p class="text-xs text-muted mb-2">No markdown. Instagram max 2,200 characters.</p>
+				<div class="flex items-baseline justify-between mb-1">
+					<label for="social_copy" class="block text-sm font-medium text-text/70">
+						Social Copy
+						<span class="text-muted font-normal">(plain text — sent to Facebook/Instagram)</span>
+					</label>
+					{#if body.trim()}
+						<button
+							type="button"
+							onclick={convertToSocialCopy}
+							class="text-xs text-accent hover:underline shrink-0 ml-4"
+						>
+							Convert from markdown
+						</button>
+					{/if}
+				</div>
+				<p class="text-xs text-muted mb-2">No markdown. Instagram max 2,200 characters. Required when posting to Facebook or Instagram.</p>
 				<textarea
 					id="social_copy" name="social_copy"
 					bind:value={socialCopy}
 					rows="6"
-					class="w-full bg-surface border border-white/20 rounded px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y text-sm"
+					class="w-full bg-surface border rounded px-4 py-3 text-text placeholder-muted focus:outline-none transition-colors resize-y text-sm
+						{!socialCopy.trim() ? 'border-red-500/40 focus:border-red-500' : 'border-white/20 focus:border-accent'}"
 					placeholder="Write the plain-text version for social platforms..."
 				></textarea>
-				<p class="text-xs text-muted mt-1 text-right">{socialCopy.length} / 2,200</p>
+				<div class="flex justify-between mt-1">
+					{#if !socialCopy.trim()}
+						<p class="text-red-400 text-xs">Required for Facebook/Instagram.</p>
+					{:else}
+						<span></span>
+					{/if}
+					<p class="text-xs text-muted">{socialCopy.length} / 2,200</p>
+				</div>
 			</div>
 		{/if}
 
