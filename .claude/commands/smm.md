@@ -121,6 +121,8 @@ DELETE /api/posts/<id>?purge=true
 Authorization: Bearer <SMM_AI_API_KEY>
 ```
 
+**Short IDs:** All `<id>` fields accept the first 8 characters of the UUID (e.g. `4a768904` instead of `4a768904-8f19-4783-a545-dcb7833a7a33`). The API resolves by prefix. If a short ID matches more than one post, the API returns `409 Conflict` with the colliding full IDs — use the full ID to disambiguate.
+
 **Post states:**
 ```
 pending_approval → published   (Dave approves via dashboard)
