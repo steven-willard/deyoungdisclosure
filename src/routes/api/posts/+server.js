@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { requireApiKey } from '$lib/server/api-auth.js';
+import { sendPostApprovalEmail } from '$lib/server/notify.js';
 
 // GET /api/posts?state=pending_approval&limit=50
 export async function GET({ request, platform, url }) {
@@ -91,6 +92,14 @@ export async function POST({ request, platform }) {
 		).bind(id, 'draft', resolvedState, resolvedCreatedBy, null, now).run();
 	} catch {
 		// D1 write failed — KV is source of truth
+	}
+
+	if (resolvedState === 'pending_approval') {
+		try {
+			await sendPostApprovalEmail(post, platform.env.RESEND_API_KEY);
+		} catch {
+			// Email failure is non-blocking — post is already saved
+		}
 	}
 
 	return json({ post }, { status: 201 });

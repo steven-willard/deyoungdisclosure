@@ -1,10 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { normalizeHighlightTimestamps } from '$lib/server/meetings.js';
-import { marked } from 'marked';
-
-// Notification email for post approval requests.
-// Testing → rockerw@live.com. Change to dave@davedeyoung.com when handing off.
-const APPROVAL_NOTIFY_EMAIL = 'rockerw@live.com';
+import { sendPostApprovalEmail } from '$lib/server/notify.js';
 
 export async function load({ platform }) {
 	try {
@@ -82,38 +78,8 @@ export const actions = {
 		}
 
 		if (state === 'pending_approval') {
-			const bodyHtml = marked.parse(post.body);
-			const socialSection = socialCopy
-				? `<h3 style="margin-top:1.5rem">Social Copy (Facebook/Instagram)</h3>
-				   <div style="background:#f5f5f5;padding:12px 16px;border-radius:6px;white-space:pre-wrap;font-family:sans-serif;font-size:14px">${socialCopy}</div>`
-				: '';
-
 			try {
-				await fetch('https://api.resend.com/emails', {
-					method: 'POST',
-					headers: {
-						'Authorization': `Bearer ${platform.env.RESEND_API_KEY}`,
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						from: 'noreply@deyoungdisclosure.com',
-						to: APPROVAL_NOTIFY_EMAIL,
-						subject: `Post pending approval: ${title}`,
-						html: `
-							<h2>New post submitted for approval</h2>
-							<table>
-								<tr><td><strong>Title</strong></td><td>${title}</td></tr>
-								<tr><td><strong>Submitted by</strong></td><td>${createdBy}</td></tr>
-								<tr><td><strong>Platforms</strong></td><td>${platforms.join(', ') || '—'}</td></tr>
-								<tr><td><strong>Tags</strong></td><td>${tags.join(', ') || '—'}</td></tr>
-							</table>
-							<h3>Post Body</h3>
-							<div style="border-left:3px solid #c9a84c;padding:8px 16px;background:#fafafa">${bodyHtml}</div>
-							${socialSection}
-							<p style="margin-top:1.5rem"><a href="https://deyoungdisclosure.com/admin">Review in dashboard →</a></p>
-						`
-					})
-				});
+				await sendPostApprovalEmail(post, platform.env.RESEND_API_KEY);
 			} catch {
 				// Email failure is non-blocking — post is already saved
 			}
