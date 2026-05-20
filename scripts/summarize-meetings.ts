@@ -139,6 +139,7 @@ const SYSTEM_PROMPT = `You are a civic transparency assistant analyzing Holland 
 The transcript is auto-generated captions — expect some noise, speaker mix-ups, and garbled names.
 Your job is to extract what actually happened: agenda items, votes, decisions, notable public comment, and key moments.
 Dave DeYoung is a Township Trustee — note anything relevant to him specifically.
+IMPORTANT: The trustee's name is "DeYoung" — always write it as one word. Auto-captions often garble it as "D. Young", "D Young", or similar. Always correct this to "DeYoung".
 Respond ONLY with valid JSON matching the schema provided. No markdown fences, no extra text.`;
 
 /**
