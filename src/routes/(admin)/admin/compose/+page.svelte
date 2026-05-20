@@ -91,12 +91,17 @@
 	function insertLinePrefix(prefix) {
 		if (!textarea) return;
 		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+
+		// Find the start of the first selected line
 		const lineStart = body.lastIndexOf('\n', start - 1) + 1;
-		body = body.slice(0, lineStart) + prefix + body.slice(lineStart);
+		const selected = body.slice(lineStart, end);
+		const prefixed = selected.split('\n').map(line => `${prefix}${line}`).join('\n');
+
+		body = body.slice(0, lineStart) + prefixed + body.slice(end);
 		setTimeout(() => {
 			textarea.focus();
-			const pos = lineStart + prefix.length;
-			textarea.setSelectionRange(pos, pos);
+			textarea.setSelectionRange(lineStart, lineStart + prefixed.length);
 		}, 0);
 	}
 
