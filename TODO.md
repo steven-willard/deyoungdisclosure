@@ -30,7 +30,7 @@ Last updated: 2026-05-20
 ## Admin Dashboard
 
 - [x] **Contact form + inbox** — fully operational. Constituent messages stored in KV, Dave notified via Resend at dave@davedeyoung.com with full message. Admin inbox at /admin/inbox shows permanent archive with expand/delete. Delete is session-protected with confirm dialog.
-- [ ] **Post approval notification email** — when Steven submits a post, email Dave a notification with a preview and link to the dashboard. Route to Steven's email during testing.
+- [x] **Post approval notification email** — fires on pending_approval; email goes to `APPROVAL_NOTIFY_EMAIL` const in compose/+page.server.js (rockerw@live.com for testing, change to dave@davedeyoung.com on handoff). Includes title, submitter, platforms, tags, 400-char body preview, and dashboard link.
 - [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Note should surface to Steven via the skill's status check.
 - [x] **Markdown editor for compose** — live split-pane editor with real-time preview using marked.
 - [x] **Surface meeting records in compose** — searchable/filterable meeting panel at bottom of compose. Expand to see highlights, click to inject blockquote + timestamp link or plain meeting link at cursor position.
