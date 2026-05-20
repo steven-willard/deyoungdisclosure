@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { marked } from 'marked';
+	import removeMd from 'remove-markdown';
 
 	let { form, data } = $props();
 	const { meetings } = data;
@@ -139,25 +140,8 @@
 		}
 	}
 
-	// Strip markdown to plain text for social copy starting point
-	function stripMarkdown(md) {
-		return md
-			.replace(/```[\s\S]*?```/g, '')
-			.replace(/`([^`]+)`/g, '$1')
-			.replace(/^#{1,6}\s+/gm, '')
-			.replace(/\*\*(.+?)\*\*/gs, '$1')
-			.replace(/\*(.+?)\*/gs, '$1')
-			.replace(/\[(.+?)\]\(.+?\)/g, '$1')
-			.replace(/^>\s*/gm, '')
-			.replace(/^[-*+]\s+/gm, '')
-			.replace(/^\d+\.\s+/gm, '')
-			.replace(/^---+$/gm, '')
-			.replace(/\n{3,}/g, '\n\n')
-			.trim();
-	}
-
 	function convertToSocialCopy() {
-		socialCopy = stripMarkdown(body);
+		socialCopy = removeMd(body);
 	}
 
 	const TOOLBAR = [
