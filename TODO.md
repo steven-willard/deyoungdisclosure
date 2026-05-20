@@ -30,11 +30,14 @@ Last updated: 2026-05-20
 ## Admin Dashboard
 
 - [x] **Contact form + inbox** — fully operational. Constituent messages stored in KV, Dave notified via Resend at dave@davedeyoung.com with full message. Admin inbox at /admin/inbox shows permanent archive with expand/delete. Delete is session-protected with confirm dialog.
-- [x] **Post approval notification email** — fires on pending_approval; email goes to `APPROVAL_NOTIFY_EMAIL` const in compose/+page.server.js (rockerw@live.com for testing, change to dave@davedeyoung.com on handoff). Includes title, submitter, platforms, tags, 400-char body preview, and dashboard link.
-- [ ] **Reject with edits** — allow Dave to reject a post and attach a note. Note should surface to Steven via the skill's status check.
-- [x] **Markdown editor for compose** — live split-pane editor with real-time preview using marked.
+- [x] **Post approval notification email** — fires on pending_approval from both compose form and API. Shared `sendPostApprovalEmail` in `src/lib/server/notify.js`. Email to `APPROVAL_NOTIFY_EMAIL` const (rockerw@live.com for testing → dave@davedeyoung.com on handoff). Markdown body rendered as HTML, social copy included if present.
+- [x] **Approve/reject gated to OWNER_EMAIL** — only Dave can approve or reject. Steven sees "Awaiting Dave's approval." Non-owners cannot trigger either action.
+- [x] **Reject with edits** — Dave rejects via dashboard, attaches a `dave_note`. SMM skill queries `GET /api/posts?state=rejected` to surface notes and iterate.
+- [x] **Markdown editor for compose** — live split-pane editor with toolbar (bold, italic, headings, blockquote, inline/block code, link, bullet/numbered list, HR). Toolbar applies to all selected lines for list prefixes.
 - [x] **Surface meeting records in compose** — searchable/filterable meeting panel at bottom of compose. Expand to see highlights, click to inject blockquote + timestamp link or plain meeting link at cursor position.
-- [ ] **Image URL preview** — show a thumbnail preview when an image URL is entered in compose. If URL is a webpage, fetch OG image instead.
+- [x] **Image URL preview in compose** — live thumbnail below image URL field. Error message if URL fails to load.
+- [x] **Social copy field** — plain-text field for Facebook/Instagram shown when either platform is checked. Required validation (client + server). "Convert from markdown" button uses `remove-markdown` to generate a starting point with URLs preserved. Character counter (2,200 Instagram limit).
+- [x] **Markdown rendered in approval cards** — pending posts show full markdown-rendered body + image preview. Social copy shown in distinct panel.
 - [ ] **Pagination on inbox + posts** — KV list returns max 1000 keys; add cursor-based pagination before inbox/post history gets large.
 
 ---
@@ -42,7 +45,7 @@ Last updated: 2026-05-20
 ## Infrastructure
 
 - [ ] **Move `_context/` to NAS** — migrate local-only context files to NAS for cross-machine access via pi-home MCP. Mirror structure at `Projects/deyoungdisclosure/context/`.
-- [ ] **Meta Graph API** — wire Facebook + Instagram publishing. When a post is approved, fire the Graph API to post simultaneously. Requires Meta app setup + Dave's page tokens. Blocked on Dave creating Facebook account.
+- [ ] **Meta Graph API** — wire Facebook + Instagram publishing. When a post is approved, fire the Graph API to post simultaneously. Requires Meta app setup + Dave's page tokens. Blocked on Dave creating Facebook account. `social_copy` field is the payload — no markdown conversion needed.
 - [ ] **Cloudflare R2 for images** — when Dave requests it, add R2 bucket for image storage. Update compose + SMM API to accept uploads and return a permanent CDN URL.
 - [x] **robots.txt** — present in static/.
 
@@ -62,8 +65,9 @@ Last updated: 2026-05-20
 ## SMM AI Skill (`/smm`)
 
 - [x] **Meeting sync tooling** — full pipeline built and seeded. See Meetings section above.
+- [x] **Status check on existing posts** — skill queries all post states (pending, rejected, published). Surfaces `dave_note` on rejected posts for iteration loop.
+- [x] **Full API visibility** — skill documents all endpoints: list by state, get single post, submit, update, soft delete, purge, rejection feedback loop, meetings API.
 - [ ] **Post queue workflow** — after building a queue, allow the skill to submit the full batch to the API in sequence with confirmations between each.
-- [ ] **Status check on existing posts** — skill should be able to query pending posts and surface Dave's notes on rejected ones so Steven can iterate.
 - [ ] **Image sourcing** — document and potentially automate image URL sourcing (Unsplash API by tag, or pull from existing social post URLs).
 
 ---
