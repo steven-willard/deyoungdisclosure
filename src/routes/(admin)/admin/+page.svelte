@@ -4,6 +4,8 @@
 
 	let { data } = $props();
 	let { pendingPosts, recentMessages, stats, isOwner } = $derived(data);
+
+	let submittingId = $state(null);
 </script>
 
 <!-- Stats row -->
@@ -76,26 +78,35 @@
 
 					{#if isOwner}
 						<div class="flex gap-3">
-							<form method="POST" action="?/approve" use:enhance class="flex gap-2 flex-1">
+							<form method="POST" action="?/approve" use:enhance={() => {
+								submittingId = post.id;
+								return async ({ update }) => { await update(); submittingId = null; };
+							}} class="flex gap-2 flex-1">
 								<input type="hidden" name="postId" value={post.id} />
 								<input
 									type="text"
 									name="note"
 									placeholder="Optional note..."
-									class="flex-1 bg-primary border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-accent transition-colors"
+									disabled={submittingId === post.id}
+									class="flex-1 bg-primary border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
 								/>
 								<button
 									type="submit"
-									class="px-4 py-1.5 bg-accent text-primary font-heading font-bold rounded text-xs tracking-wide hover:brightness-110 transition-all"
+									disabled={submittingId === post.id}
+									class="px-4 py-1.5 bg-accent text-primary font-heading font-bold rounded text-xs tracking-wide hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
 								>
-									Approve
+									{submittingId === post.id ? 'Publishing…' : 'Approve'}
 								</button>
 							</form>
-							<form method="POST" action="?/reject" use:enhance>
+							<form method="POST" action="?/reject" use:enhance={() => {
+								submittingId = post.id;
+								return async ({ update }) => { await update(); submittingId = null; };
+							}}>
 								<input type="hidden" name="postId" value={post.id} />
 								<button
 									type="submit"
-									class="px-4 py-1.5 border border-red-500/40 text-red-400 rounded text-xs font-medium hover:bg-red-500/10 transition-all"
+									disabled={submittingId === post.id}
+									class="px-4 py-1.5 border border-red-500/40 text-red-400 rounded text-xs font-medium hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									Reject
 								</button>
