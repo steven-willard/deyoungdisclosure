@@ -5,7 +5,7 @@ Last updated: 2026-05-19
 ---
 
 ## Immediate
-- [ ] **Purge 3 test posts** — IDs: `4a768904`, `9abd1a9f`, `c9ed9b52` — created for home/posts/individual page testing, clearly labeled [TEST], purge when done validating
+- [x] **Purge 3 test posts** — purged 2026-05-20
 
 ---
 
