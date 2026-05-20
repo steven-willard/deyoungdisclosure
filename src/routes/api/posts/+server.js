@@ -45,7 +45,7 @@ export async function POST({ request, platform }) {
 		return json({ error: 'Invalid JSON' }, { status: 400 });
 	}
 
-	const { title, body: postBody, tags, image_url, platforms, state, created_by } = body;
+	const { title, body: postBody, tags, image_url, platforms, state, created_by, social_copy } = body;
 
 	if (!title || !postBody) {
 		return json({ error: 'title and body are required' }, { status: 400 });
@@ -64,6 +64,7 @@ export async function POST({ request, platform }) {
 		tags: resolvedTags,
 		image_url: image_url ?? null,
 		platforms: resolvedPlatforms,
+		social_copy: social_copy ?? null,
 		state: resolvedState,
 		created_by: resolvedCreatedBy,
 		created_at: now,
@@ -77,11 +78,11 @@ export async function POST({ request, platform }) {
 	// Write to D1
 	try {
 		await platform.env.DB.prepare(
-			`INSERT INTO posts (id, title, body, tags, image_url, platforms, state, created_by, created_at, updated_at, dave_note)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			`INSERT INTO posts (id, title, body, tags, image_url, platforms, social_copy, state, created_by, created_at, updated_at, dave_note)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		).bind(
 			id, title, postBody, JSON.stringify(resolvedTags), image_url ?? null,
-			JSON.stringify(resolvedPlatforms), resolvedState, resolvedCreatedBy, now, now, null
+			JSON.stringify(resolvedPlatforms), social_copy ?? null, resolvedState, resolvedCreatedBy, now, now, null
 		).run();
 
 		await platform.env.DB.prepare(

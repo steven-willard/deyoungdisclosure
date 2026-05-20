@@ -78,7 +78,8 @@ Authorization: Bearer <SMM_AI_API_KEY>
 
 {
   "title": "Post title",
-  "body": "Post body — markdown supported",
+  "body": "Post body — markdown supported, rendered on the website",
+  "social_copy": "Plain text for Facebook/Instagram — no markdown, max 2200 chars for Instagram. Omit if website-only.",
   "tags": ["Accountability", "Transparency"],
   "platforms": ["Facebook", "Instagram"],
   "image_url": "https://... or omit if none",

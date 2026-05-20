@@ -30,6 +30,7 @@ export const actions = {
 		const tagsRaw = data.get('tags')?.toString().trim() ?? '';
 		const imageUrl = data.get('image_url')?.toString().trim() || null;
 		const platforms = data.getAll('platforms').map(p => p.toString());
+		const socialCopy = data.get('social_copy')?.toString().trim() || null;
 
 		if (!title || !body) {
 			return fail(400, { error: 'Title and body are required.' });
@@ -52,6 +53,7 @@ export const actions = {
 			id, title, body, tags,
 			image_url: imageUrl,
 			platforms,
+			social_copy: socialCopy,
 			state,
 			created_by: createdBy,
 			created_at: now,
@@ -63,11 +65,11 @@ export const actions = {
 
 		try {
 			await platform.env.DB.prepare(
-				`INSERT INTO posts (id, title, body, tags, image_url, platforms, state, created_by, created_at, updated_at, dave_note)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO posts (id, title, body, tags, image_url, platforms, social_copy, state, created_by, created_at, updated_at, dave_note)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			).bind(
 				id, title, body, JSON.stringify(tags), imageUrl,
-				JSON.stringify(platforms), state, createdBy, now, now, null
+				JSON.stringify(platforms), socialCopy, state, createdBy, now, now, null
 			).run();
 
 			await platform.env.DB.prepare(

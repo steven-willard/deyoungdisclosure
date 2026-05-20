@@ -16,6 +16,20 @@
 	let imageError = $state(false);
 	$effect(() => { imageError = false; });
 
+	// Platform selection + social copy
+	let selectedPlatforms = $state([]);
+	let socialCopy = $state('');
+	const showSocialCopy = $derived(
+		selectedPlatforms.includes('Facebook') || selectedPlatforms.includes('Instagram')
+	);
+	function togglePlatform(platform) {
+		if (selectedPlatforms.includes(platform)) {
+			selectedPlatforms = selectedPlatforms.filter(p => p !== platform);
+		} else {
+			selectedPlatforms = [...selectedPlatforms, platform];
+		}
+	}
+
 	// Meeting search
 	let meetingSearch = $state('');
 	let meetingTypeFilter = $state('All');
@@ -230,12 +244,36 @@
 			<div class="flex gap-4">
 				{#each PLATFORMS as platform}
 					<label class="flex items-center gap-2 cursor-pointer">
-						<input type="checkbox" name="platforms" value={platform} class="accent-accent w-4 h-4" />
+						<input
+							type="checkbox" name="platforms" value={platform}
+							checked={selectedPlatforms.includes(platform)}
+							onchange={() => togglePlatform(platform)}
+							class="accent-accent w-4 h-4"
+						/>
 						<span class="text-sm text-text/80">{platform}</span>
 					</label>
 				{/each}
 			</div>
 		</div>
+
+		<!-- Social Copy — shown when Facebook or Instagram is selected -->
+		{#if showSocialCopy}
+			<div class="max-w-2xl">
+				<label for="social_copy" class="block text-sm font-medium text-text/70 mb-1">
+					Social Copy
+					<span class="text-muted font-normal">(plain text — sent to Facebook/Instagram)</span>
+				</label>
+				<p class="text-xs text-muted mb-2">No markdown. Instagram max 2,200 characters.</p>
+				<textarea
+					id="social_copy" name="social_copy"
+					bind:value={socialCopy}
+					rows="6"
+					class="w-full bg-surface border border-white/20 rounded px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y text-sm"
+					placeholder="Write the plain-text version for social platforms..."
+				></textarea>
+				<p class="text-xs text-muted mt-1 text-right">{socialCopy.length} / 2,200</p>
+			</div>
+		{/if}
 
 		<!-- Submit -->
 		<div class="pt-2">

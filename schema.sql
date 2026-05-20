@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS posts (
   created_by TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  dave_note TEXT
+  dave_note TEXT,
+  social_copy TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_posts_state ON posts(state);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC);

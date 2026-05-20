@@ -59,6 +59,13 @@
 						{@html marked.parse(post.body ?? '')}
 					</div>
 
+					{#if post.social_copy}
+						<div class="mb-4 border border-white/10 rounded-lg p-3 bg-white/5">
+							<p class="text-xs text-muted font-medium mb-1">Social Copy (Facebook/Instagram)</p>
+							<p class="text-text/70 text-sm whitespace-pre-wrap">{post.social_copy}</p>
+						</div>
+					{/if}
+
 					{#if post.tags?.length}
 						<div class="flex gap-2 flex-wrap mb-4">
 							{#each post.tags as tag}

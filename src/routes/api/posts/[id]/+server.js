@@ -40,6 +40,7 @@ export async function PUT({ request, platform, params }) {
 		tags: body.tags ?? existing.tags,
 		image_url: body.image_url !== undefined ? body.image_url : existing.image_url,
 		platforms: body.platforms ?? existing.platforms,
+		social_copy: body.social_copy !== undefined ? body.social_copy : existing.social_copy,
 		state: body.state ?? existing.state,
 		dave_note: body.dave_note !== undefined ? body.dave_note : existing.dave_note,
 		updated_at: now
@@ -49,11 +50,11 @@ export async function PUT({ request, platform, params }) {
 
 	try {
 		await platform.env.DB.prepare(
-			`UPDATE posts SET title=?, body=?, tags=?, image_url=?, platforms=?, state=?, dave_note=?, updated_at=?
+			`UPDATE posts SET title=?, body=?, tags=?, image_url=?, platforms=?, social_copy=?, state=?, dave_note=?, updated_at=?
 			 WHERE id=?`
 		).bind(
 			updated.title, updated.body, JSON.stringify(updated.tags), updated.image_url,
-			JSON.stringify(updated.platforms), updated.state, updated.dave_note, now, id
+			JSON.stringify(updated.platforms), updated.social_copy ?? null, updated.state, updated.dave_note, now, id
 		).run();
 
 		if (body.state && body.state !== prevState) {
