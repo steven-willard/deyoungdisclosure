@@ -141,7 +141,7 @@
 	}
 
 	function convertToSocialCopy() {
-		socialCopy = removeMd(body);
+		socialCopy = removeMd(body, { replaceLinksWithURL: true });
 	}
 
 	const TOOLBAR = [
