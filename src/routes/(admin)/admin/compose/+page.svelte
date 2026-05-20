@@ -11,6 +11,11 @@
 	let body = $state('');
 	let preview = $derived(marked.parse(body));
 
+	// Image URL for live preview
+	let imageUrl = $state('');
+	let imageError = $state(false);
+	$effect(() => { imageError = false; });
+
 	// Meeting search
 	let meetingSearch = $state('');
 	let meetingTypeFilter = $state('All');
@@ -43,11 +48,55 @@
 		const after = body.slice(end);
 		const newline = before.length && !before.endsWith('\n') ? '\n' : '';
 		body = `${before}${newline}${text}\n${after}`;
-		// Restore focus and cursor after inserted text
 		setTimeout(() => {
 			textarea.focus();
 			const pos = start + newline.length + text.length + 1;
 			textarea.setSelectionRange(pos, pos);
+		}, 0);
+	}
+
+	function wrapSelection(before, after = before, placeholder = 'text') {
+		if (!textarea) return;
+		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+		const selected = body.slice(start, end) || placeholder;
+		const replacement = `${before}${selected}${after}`;
+		body = body.slice(0, start) + replacement + body.slice(end);
+		setTimeout(() => {
+			textarea.focus();
+			if (body.slice(start, end)) {
+				textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+			} else {
+				// No selection — select the placeholder text
+				textarea.setSelectionRange(start + before.length, start + before.length + placeholder.length);
+			}
+		}, 0);
+	}
+
+	function insertLinePrefix(prefix) {
+		if (!textarea) return;
+		const start = textarea.selectionStart;
+		const lineStart = body.lastIndexOf('\n', start - 1) + 1;
+		body = body.slice(0, lineStart) + prefix + body.slice(lineStart);
+		setTimeout(() => {
+			textarea.focus();
+			const pos = lineStart + prefix.length;
+			textarea.setSelectionRange(pos, pos);
+		}, 0);
+	}
+
+	function insertCodeBlock() {
+		if (!textarea) return;
+		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+		const selected = body.slice(start, end) || 'code here';
+		const block = `\`\`\`js\n${selected}\n\`\`\``;
+		body = body.slice(0, start) + block + body.slice(end);
+		setTimeout(() => {
+			textarea.focus();
+			// Select the inner content
+			const innerStart = start + 4; // after ```js\n
+			textarea.setSelectionRange(innerStart, innerStart + selected.length);
 		}, 0);
 	}
 
@@ -63,6 +112,20 @@
 		const md = `[${meeting.type} — ${date}](${meeting.youtube_url})`;
 		insertAtCursor(md);
 	}
+
+	const TOOLBAR = [
+		{ label: 'B', title: 'Bold', action: () => wrapSelection('**', '**', 'bold text'), style: 'font-bold' },
+		{ label: 'I', title: 'Italic', action: () => wrapSelection('*', '*', 'italic text'), style: 'italic' },
+		{ label: 'H2', title: 'Heading 2', action: () => insertLinePrefix('## ') },
+		{ label: 'H3', title: 'Heading 3', action: () => insertLinePrefix('### ') },
+		{ label: '"', title: 'Blockquote', action: () => insertLinePrefix('> ') },
+		{ label: '`', title: 'Inline code', action: () => wrapSelection('`', '`', 'code') },
+		{ label: '{ }', title: 'Code block', action: insertCodeBlock },
+		{ label: '🔗', title: 'Link', action: () => wrapSelection('[', '](https://)', 'link text') },
+		{ label: '•', title: 'Bullet list', action: () => insertLinePrefix('- ') },
+		{ label: '1.', title: 'Numbered list', action: () => insertLinePrefix('1. ') },
+		{ label: '—', title: 'Horizontal rule', action: () => insertAtCursor('---') },
+	];
 </script>
 
 {#if form?.error}
@@ -84,9 +147,24 @@
 			/>
 		</div>
 
-		<!-- Body — split pane -->
+		<!-- Body — split pane with toolbar -->
 		<div>
 			<label class="block text-sm font-medium text-text/70 mb-2">Body</label>
+
+			<!-- Toolbar -->
+			<div class="flex flex-wrap gap-1 mb-2 p-2 bg-surface border border-white/10 rounded-t border-b-0">
+				{#each TOOLBAR as btn}
+					<button
+						type="button"
+						title={btn.title}
+						onclick={btn.action}
+						class="px-2 py-1 rounded text-xs text-text/70 hover:bg-white/10 hover:text-text transition-colors font-mono {btn.style ?? ''}"
+					>
+						{btn.label}
+					</button>
+				{/each}
+			</div>
+
 			<div class="grid grid-cols-2 gap-4">
 				<div>
 					<p class="text-xs text-muted mb-1">Markdown</p>
@@ -96,7 +174,7 @@
 						name="body"
 						required
 						rows="16"
-						class="w-full bg-surface border border-white/20 rounded px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y font-mono text-sm"
+						class="w-full bg-surface border border-white/20 rounded-b px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors resize-y font-mono text-sm"
 						placeholder="Post content — markdown supported..."
 					></textarea>
 				</div>
@@ -123,14 +201,27 @@
 			/>
 		</div>
 
-		<!-- Image URL -->
+		<!-- Image URL + live preview -->
 		<div class="max-w-2xl">
 			<label for="image_url" class="block text-sm font-medium text-text/70 mb-2">Image URL <span class="text-muted font-normal">(optional)</span></label>
 			<input
 				id="image_url" name="image_url" type="url"
+				bind:value={imageUrl}
 				class="w-full bg-surface border border-white/20 rounded px-4 py-3 text-text placeholder-muted focus:outline-none focus:border-accent transition-colors"
 				placeholder="https://..."
 			/>
+			{#if imageUrl && !imageError}
+				<div class="mt-3 rounded-lg overflow-hidden border border-white/10 max-h-48">
+					<img
+						src={imageUrl}
+						alt="Preview"
+						class="w-full object-cover max-h-48"
+						onerror={() => { imageError = true; }}
+					/>
+				</div>
+			{:else if imageUrl && imageError}
+				<p class="text-red-400 text-xs mt-2">Could not load image from that URL.</p>
+			{/if}
 		</div>
 
 		<!-- Platforms -->
@@ -244,5 +335,7 @@
 		border-left: 3px solid #c9a84c; margin: 1rem 0;
 		padding: 0.25rem 1rem; color: rgba(240,240,240,0.6); font-style: italic;
 	}
-	.post-body :global(code) { background: rgba(255,255,255,0.08); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
+	.post-body :global(code) { background: rgba(255,255,255,0.08); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; font-family: monospace; }
+	.post-body :global(pre) { background: rgba(255,255,255,0.05); padding: 0.75rem 1rem; border-radius: 6px; overflow-x: auto; margin-bottom: 1rem; }
+	.post-body :global(pre code) { background: none; padding: 0; }
 </style>

@@ -1,5 +1,11 @@
-export async function load({ platform }) {
+export async function load({ platform, request }) {
 	const kv = platform.env.DEYOUNG_KV;
+
+	const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+	const { getSession } = await import('$lib/server/auth.js');
+	const session = await getSession(kv, sessionId);
+	const ownerEmail = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+	const isOwner = !!(session?.email && session.email.trim().toLowerCase() === ownerEmail);
 
 	// Fetch pending posts from KV
 	const postsList = await kv.list({ prefix: 'posts:' });
@@ -37,7 +43,7 @@ export async function load({ platform }) {
 		// D1 may not be set up yet
 	}
 
-	return { pendingPosts, recentMessages, stats };
+	return { pendingPosts, recentMessages, stats, isOwner };
 }
 
 export const actions = {
@@ -46,6 +52,15 @@ export const actions = {
 		const postId = data.get('postId')?.toString();
 		const note = data.get('note')?.toString() ?? '';
 		if (!postId) return;
+
+		const kv2 = platform.env.DEYOUNG_KV;
+		const sessionId2 = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+		const { getSession: gs } = await import('$lib/server/auth.js');
+		const session2 = await gs(kv2, sessionId2);
+		const ownerEmail2 = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+		if (!session2 || session2.email.trim().toLowerCase() !== ownerEmail2) {
+			return { error: 'Only Dave can approve posts.' };
+		}
 
 		const kv = platform.env.DEYOUNG_KV;
 		const raw = await kv.get(`posts:${postId}`);
@@ -86,6 +101,15 @@ export const actions = {
 		const data = await request.formData();
 		const postId = data.get('postId')?.toString();
 		if (!postId) return;
+
+		const kv3 = platform.env.DEYOUNG_KV;
+		const sessionId3 = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+		const { getSession: gs3 } = await import('$lib/server/auth.js');
+		const session3 = await gs3(kv3, sessionId3);
+		const ownerEmail3 = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+		if (!session3 || session3.email.trim().toLowerCase() !== ownerEmail3) {
+			return { error: 'Only Dave can reject posts.' };
+		}
 
 		const kv = platform.env.DEYOUNG_KV;
 		const raw = await kv.get(`posts:${postId}`);
