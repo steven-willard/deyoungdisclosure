@@ -141,6 +141,44 @@ Your job is to extract what actually happened: agenda items, votes, decisions, n
 Dave DeYoung is a Township Trustee — note anything relevant to him specifically.
 Respond ONLY with valid JSON matching the schema provided. No markdown fences, no extra text.`;
 
+/**
+ * Find the segment offset (in seconds) whose text best matches a given quote.
+ * Scores word overlap across a sliding window of segments.
+ */
+function matchQuoteToOffset(
+  quote: string,
+  segments: { text: string; offset: number }[]
+): number {
+  const quoteWords = quote
+    .toLowerCase()
+    .split(/\W+/)
+    .filter(w => w.length > 3);
+  if (quoteWords.length === 0) return Math.round(segments[0]?.offset / 1000 ?? 0);
+
+  const quoteSet = new Set(quoteWords);
+  let bestScore = -1;
+  let bestOffset = segments[0]?.offset ?? 0;
+
+  // Score each segment and the following 2 (to handle split phrases)
+  for (let i = 0; i < segments.length; i++) {
+    const window = segments
+      .slice(i, i + 3)
+      .map(s => s.text)
+      .join(" ")
+      .toLowerCase()
+      .split(/\W+/)
+      .filter(w => w.length > 3);
+    const hits = window.filter(w => quoteSet.has(w)).length;
+    const score = hits / quoteSet.size;
+    if (score > bestScore) {
+      bestScore = score;
+      bestOffset = segments[i].offset;
+    }
+  }
+
+  return Math.round(bestOffset / 1000);
+}
+
 async function summarizeMeeting(m: any): Promise<{ summary: string; highlights: Highlight[] }> {
   const formatted = formatSegmentsForPrompt(m.segments);
 
@@ -150,11 +188,12 @@ Return JSON with this exact shape:
 {
   "summary": "markdown string — 3-6 bullet points covering: agenda items discussed, votes taken (with counts if stated), key decisions, notable public comment, and anything relevant to Trustee Dave DeYoung",
   "highlights": [
-    { "timestamp_sec": 123, "topic": "short topic label", "quote": "verbatim or near-verbatim quote from the transcript" }
+    { "topic": "short topic label", "quote": "verbatim or near-verbatim quote from the transcript" }
   ]
 }
 
-highlights: include 5-10 of the most significant moments (votes, decisions, heated discussion, public comment). timestamp_sec must be an integer number of SECONDS matching the [M:SS] or [H:MM:SS] timestamp shown in the transcript for that segment.
+highlights: include 5-10 of the most significant moments (votes, decisions, heated discussion, public comment).
+The quote must be a verbatim or near-verbatim phrase from the transcript text — it will be used to locate the exact timestamp automatically.
 
 TRANSCRIPT:
 ${formatted}`;
@@ -168,7 +207,16 @@ ${formatted}`;
 
   const raw = response.content[0].type === "text" ? response.content[0].text : "";
   const text = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
-  return JSON.parse(text);
+  const parsed: { summary: string; highlights: { topic: string; quote: string }[] } = JSON.parse(text);
+
+  // Derive accurate timestamps from quote matching against actual segments
+  const highlights: Highlight[] = parsed.highlights.map(h => ({
+    topic: h.topic,
+    quote: h.quote,
+    timestamp_sec: matchQuoteToOffset(h.quote, m.segments),
+  }));
+
+  return { summary: parsed.summary, highlights };
 }
 
 // --- Main loop ---
