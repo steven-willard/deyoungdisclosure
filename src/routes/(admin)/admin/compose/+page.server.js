@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { normalizeHighlightTimestamps } from '$lib/server/meetings.js';
+import { marked } from 'marked';
 
 // Notification email for post approval requests.
 // Testing → rockerw@live.com. Change to dave@davedeyoung.com when handing off.
@@ -81,9 +82,11 @@ export const actions = {
 		}
 
 		if (state === 'pending_approval') {
-			const preview = post.body.length > 400
-				? post.body.slice(0, 400).trimEnd() + '…'
-				: post.body;
+			const bodyHtml = marked.parse(post.body);
+			const socialSection = socialCopy
+				? `<h3 style="margin-top:1.5rem">Social Copy (Facebook/Instagram)</h3>
+				   <div style="background:#f5f5f5;padding:12px 16px;border-radius:6px;white-space:pre-wrap;font-family:sans-serif;font-size:14px">${socialCopy}</div>`
+				: '';
 
 			try {
 				await fetch('https://api.resend.com/emails', {
@@ -104,9 +107,10 @@ export const actions = {
 								<tr><td><strong>Platforms</strong></td><td>${platforms.join(', ') || '—'}</td></tr>
 								<tr><td><strong>Tags</strong></td><td>${tags.join(', ') || '—'}</td></tr>
 							</table>
-							<h3>Preview</h3>
-							<pre style="white-space:pre-wrap;font-family:sans-serif">${preview}</pre>
-							<p><a href="https://deyoungdisclosure.com/admin">Review in dashboard →</a></p>
+							<h3>Post Body</h3>
+							<div style="border-left:3px solid #c9a84c;padding:8px 16px;background:#fafafa">${bodyHtml}</div>
+							${socialSection}
+							<p style="margin-top:1.5rem"><a href="https://deyoungdisclosure.com/admin">Review in dashboard →</a></p>
 						`
 					})
 				});
