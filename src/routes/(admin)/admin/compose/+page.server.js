@@ -90,6 +90,15 @@ export const actions = {
 			}
 		}
 
+		if (state === 'published' && post.platforms?.includes('Facebook')) {
+			try {
+				const { publishToFacebook } = await import('$lib/server/social.js');
+				await publishToFacebook(post, platform.env);
+			} catch {
+				// Social publish failure is non-blocking — post is already saved
+			}
+		}
+
 		throw redirect(303, '/admin');
 	}
 };

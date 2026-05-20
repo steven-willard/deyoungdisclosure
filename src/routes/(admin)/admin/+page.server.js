@@ -94,6 +94,20 @@ export const actions = {
 			// D1 not available
 		}
 
+		// Publish to social platforms — non-blocking, approval already saved
+		if (post.platforms?.includes('Facebook')) {
+			try {
+				const { publishToFacebook } = await import('$lib/server/social.js');
+				const result = await publishToFacebook(post, platform.env);
+				// Store FB post ID back on the record for reference
+				post.fb_post_id = result.id;
+				await kv.put(`posts:${postId}`, JSON.stringify(post));
+			} catch (err) {
+				// Social publish failure is non-blocking
+				console.error('Facebook publish failed:', err?.message);
+			}
+		}
+
 		return { success: true };
 	},
 
