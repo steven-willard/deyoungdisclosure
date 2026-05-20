@@ -10,6 +10,7 @@ dist/
 .env
 .env.*
 !.env.example
+.dev.vars
 
 # Context files — never push to repo
 _context/
