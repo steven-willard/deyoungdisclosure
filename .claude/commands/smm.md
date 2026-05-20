@@ -78,39 +78,32 @@ Authorization: Bearer <SMM_AI_API_KEY>
 
 {
   "title": "Post title",
-  "body": "Post body — markdown supported, rendered on the website",
-  "social_copy": "Plain text for Facebook/Instagram — no markdown, max 2200 chars for Instagram. Omit if website-only.",
+  "body": "Markdown body — rendered on the website. Use headings, bold, blockquotes, lists.",
+  "social_copy": "Plain text for Facebook/Instagram — no markdown, max 2200 chars. Required if platforms includes Facebook or Instagram. Omit for website-only posts.",
   "tags": ["Accountability", "Transparency"],
-  "platforms": ["Facebook", "Instagram"],
+  "platforms": ["Facebook", "Instagram", "Website"],
   "image_url": "https://... or omit if none",
   "created_by": "smm-ai"
 }
 ```
 
-Response includes the created post with its `id` and `state: "pending_approval"`.
-Dave sees it on his dashboard at `deyoungdisclosure.com/admin` and approves or rejects it there.
+Response includes the created post with its `id` and `state: "pending_approval"`. Dave sees it on his dashboard and approves or rejects it there. An approval notification email fires automatically on submission.
 
-**Check post status:**
-```
-GET /api/posts/<id>
-Authorization: Bearer <SMM_AI_API_KEY>
-```
-
-**List all pending posts:**
-```
-GET /api/posts?state=pending_approval
-Authorization: Bearer <SMM_AI_API_KEY>
-```
-
-**Update a post (e.g. revise after Dave rejects):**
+**Resubmit after Dave rejects (revise content, reset to pending_approval):**
 ```
 PUT /api/posts/<id>
 Authorization: Bearer <SMM_AI_API_KEY>
 
-{ "body": "revised content", "state": "pending_approval" }
+{
+  "body": "revised body",
+  "social_copy": "revised social copy",
+  "state": "pending_approval"
+}
 ```
 
-**Soft delete (keeps record for AI context, recoverable):**
+Any field can be updated individually — omit fields you aren't changing.
+
+**Soft delete (marks deleted, keeps record, recoverable):**
 ```
 DELETE /api/posts/<id>
 Authorization: Bearer <SMM_AI_API_KEY>
@@ -122,18 +115,83 @@ DELETE /api/posts/<id>?purge=true
 Authorization: Bearer <SMM_AI_API_KEY>
 ```
 
+---
+
+### 6. Check Status & Rejection Feedback
+
+Use this any time you need to see where posts stand or pick up Dave's feedback on a rejection.
+
+**List all pending posts (waiting on Dave):**
+```
+GET /api/posts?state=pending_approval
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+**List all rejected posts (Dave said no — check dave_note for feedback):**
+```
+GET /api/posts?state=rejected
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+**List all published posts (live on the site):**
+```
+GET /api/posts?state=published
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+**List all non-deleted posts (default — all active states):**
+```
+GET /api/posts
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+Optional params: `?limit=50` (max 100).
+
+**Get a single post by ID:**
+```
+GET /api/posts/<id>
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+**Post response shape:**
+```json
+{
+  "id": "uuid",
+  "title": "...",
+  "body": "markdown...",
+  "social_copy": "plain text or null",
+  "tags": ["..."],
+  "platforms": ["Facebook", "Instagram", "Website"],
+  "image_url": "https://... or null",
+  "state": "pending_approval | published | rejected | deleted",
+  "created_by": "smm-ai",
+  "created_at": "ISO timestamp",
+  "updated_at": "ISO timestamp",
+  "dave_note": "Dave's feedback on rejection, or null"
+}
+```
+
+**Rejection feedback loop:**
+1. Query `GET /api/posts?state=rejected`
+2. Read `dave_note` on each rejected post — this is Dave's feedback
+3. Revise the post body/social_copy based on the note
+4. Resubmit via `PUT /api/posts/<id>` with `{ ..., "state": "pending_approval" }`
+5. A new approval email fires automatically
+
 **Short IDs:** All `<id>` fields accept the first 8 characters of the UUID (e.g. `4a768904` instead of `4a768904-8f19-4783-a545-dcb7833a7a33`). The API resolves by prefix. If a short ID matches more than one post, the API returns `409 Conflict` with the colliding full IDs — use the full ID to disambiguate.
 
 **Post states:**
 ```
 pending_approval → published   (Dave approves via dashboard)
-pending_approval → rejected    (Dave rejects via dashboard)
+pending_approval → rejected    (Dave rejects via dashboard — dave_note contains feedback)
 rejected → pending_approval    (resubmit after edits via PUT)
-any state → deleted            (soft delete, recoverable via PUT)
+any state → deleted            (soft delete, recoverable via PUT { "state": "pending_approval" })
 any state → purged             (DELETE ?purge=true, permanent)
 ```
 
-### 6. Sync YouTube Meetings (`sync-youtube`)
+---
+
+### 7. Sync YouTube Meetings (`sync-youtube`)
 
 Scrape the Holland Charter Township site for new meeting recordings, summarize them via Anthropic API, and push to D1.
 
@@ -153,7 +211,7 @@ Parse `SMM_AI_API_KEY` and `YOUTUBE_SUMMARIZER_API_KEY` from `.env.local`. Both 
    DEYOUNG_API_KEY=<SMM_AI_API_KEY> npx tsx scripts/seed-meetings.ts
    ```
 
-**Query meetings from D1 (for post context):**
+**Query meetings from D1 (for post context and factual grounding):**
 ```
 GET /api/meetings
 GET /api/meetings?type=Board+of+Trustees
@@ -189,4 +247,5 @@ Authorization: Bearer <SMM_AI_API_KEY>
 - Always end a draft session with the approval reminder: Dave must confirm before anything posts
 - Dave owns all accounts — Steven drafts, Dave approves
 - Body field supports markdown — use it for structure when appropriate
+- Social copy must be plain text — no markdown syntax, written to read naturally in a social feed
 - Dave posting directly → publishes immediately. Steven posting → goes to pending approval.
