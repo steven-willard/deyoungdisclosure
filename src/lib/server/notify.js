@@ -1,8 +1,6 @@
 import { marked } from 'marked';
 
-// Notification email for post approval requests.
-// Testing → rockerw@live.com. Change to dave@davedeyoung.com on handoff.
-const APPROVAL_NOTIFY_EMAIL = 'rockerw@live.com';
+const APPROVAL_NOTIFY_EMAIL = 'dave@davedeyoung.com';
 
 /**
  * Send a pending-approval notification email via Resend.
