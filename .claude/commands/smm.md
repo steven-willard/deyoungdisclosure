@@ -47,7 +47,14 @@ Ask:
 Draft the post(s). For each:
 - Facebook version first (longer form acceptable, markdown supported)
 - Instagram version (tighter, 3–5 sentences, hashtags: #HollandMI #HollandMichigan #HollandCharterTownship #CivicTransparency #HCTTrustee)
-- Nextdoor version if requested (conversational, no hashtags)
+- Nextdoor version if requested (conversational, no hashtags, link to site when relevant)
+
+**Facebook link placement rule — enforce on every draft:**
+- **Accountability posts** — include the deyoungdisclosure.com link in the post body. Reach penalty is worth it for credibility.
+- **Community / positive / engagement posts** — NO link in the body. End with a note for Dave/Steven: *"Post first, then drop a first comment: 'Full archive at deyoungdisclosure.com'"*. This preserves algorithmic reach while still driving site traffic.
+
+**Distribution reminder — include at the bottom of every Facebook draft:**
+After approving, share workflow: (1) Page posts → (2) Dave shares to personal profile → (3) Steven shares into Holland Informed, Holland is SO Ghetto, Holland MI Community Group, and active HCT HOA groups → (4) Steven posts Nextdoor version.
 
 Check all drafts against rules before showing them. If a violation is found, name it and stop.
 
@@ -71,15 +78,46 @@ When a draft is approved by the user and ready for Dave's review, submit it to t
 Read the API key from `.env.local` if present, otherwise fall back to NAS at `Projects/deyoungdisclosure/smm-api.key`.
 
 **Submit a new post (goes to pending_approval — Dave approves via dashboard):**
-```
-POST /api/posts
-Content-Type: application/json
-Authorization: Bearer <SMM_AI_API_KEY>
 
+> ⚠️ **Encoding rule — always use Node for API writes, never curl directly.**
+> Windows curl mangles Unicode characters (em dashes `—`, curly quotes `'` `"`, ellipses `…`) into replacement characters `?` that get stored permanently in the database. Always use the Node.js `https` module to POST or PUT post content so Unicode escapes (`\u2014`, `\u2019`, etc.) are serialized correctly. After every POST or PUT, fetch the post back and spot-check the body for `?` characters before considering the submission done. If mangling is found, immediately PUT the corrected content.
+
+```js
+// Template — Node https POST/PUT for API writes
+const https = require('https');
+const body = JSON.stringify({ /* payload */ });
+const req = https.request({
+  hostname: 'deyoungdisclosure.com',
+  path: '/api/posts',          // or /api/posts/<id> for PUT
+  method: 'POST',              // or 'PUT'
+  headers: {
+    'Authorization': 'Bearer <SMM_AI_API_KEY>',
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(body)
+  }
+}, res => {
+  let data = '';
+  res.on('data', d => data += d);
+  res.on('end', () => console.log(JSON.parse(data)));
+});
+req.write(body);
+req.end();
+```
+
+**Common Unicode escapes for post copy:**
+- Em dash `—` → `\u2014`
+- Left single quote / apostrophe `'` → `\u2019`
+- Right single quote `'` → `\u2018`
+- Left double quote `"` → `\u201C`
+- Right double quote `"` → `\u201D`
+- Ellipsis `…` → `\u2026`
+
+**Payload shape:**
+```json
 {
   "title": "Post title",
-  "body": "Markdown body — rendered on the website. Use headings, bold, blockquotes, lists.",
-  "social_copy": "Plain text for Facebook/Instagram — no markdown, max 2200 chars. Required if platforms includes Facebook or Instagram. Omit for website-only posts.",
+  "body": "Markdown body \u2014 rendered on the website.",
+  "social_copy": "Plain text for Facebook/Instagram \u2014 no markdown, max 2200 chars. Required if platforms includes Facebook or Instagram.",
   "tags": ["Accountability", "Transparency"],
   "platforms": ["Facebook", "Instagram", "Website"],
   "image_url": "https://... or omit if none",

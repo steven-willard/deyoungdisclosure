@@ -1,6 +1,6 @@
 # DeYoung Disclosure — TODO
 
-Last updated: 2026-05-20
+Last updated: 2026-05-24
 
 ---
 
@@ -45,7 +45,8 @@ Last updated: 2026-05-20
 ## Infrastructure
 
 - [ ] **Move `_context/` to NAS** — migrate local-only context files to NAS for cross-machine access via pi-home MCP. Mirror structure at `Projects/deyoungdisclosure/context/`.
-- [ ] **Meta Graph API** — wire Facebook + Instagram publishing. When a post is approved, fire the Graph API to post simultaneously. Requires Meta app setup + Dave's page tokens. Blocked on Dave creating Facebook account. `social_copy` field is the payload — no markdown conversion needed.
+- [x] **Meta Graph API — Facebook** — wired. Approved posts auto-publish to Facebook Page via Graph API. `social_copy` is the payload. `fb_post_id` stored back to KV on success.
+- [ ] **Meta Graph API — Instagram (Phase 2)** — Instagram requires images on every post and a separate API call (`POST /{ig-user-id}/media` + `/media_publish`). Needs `instagram_basic` + `instagram_content_publish` permissions. Deferred until consistent image strategy is in place. Dave aware — phase 1 is site + Facebook only.
 - [ ] **Cloudflare R2 for images** — when Dave requests it, add R2 bucket for image storage. Update compose + SMM API to accept uploads and return a permanent CDN URL.
 - [x] **robots.txt** — present in static/.
 
@@ -77,4 +78,10 @@ Last updated: 2026-05-20
 - [ ] **SMS fallback for Dave** — if a post sits in `pending_approval` for 24h without action, send Dave an SMS reminder.
 - [ ] **Public post search** — full-text search on the posts archive.
 - [ ] **Nextdoor integration** — Nextdoor doesn't have a public API, so this would be manual or clipboard-copy from the skill output.
-- [ ] **Email newsletter** — opt-in list for residents who want new posts delivered to their inbox.
+- [ ] **Email newsletter** — opt-in subscriber list. Residents enter email on the public site, get notified when Dave publishes a post. Resend free tier (3,000/month, 100/day) is sufficient until the list hits triple digits.
+  - D1 schema: `subscribers` table — `id`, `email` (unique), `confirmed` (bool), `confirm_token`, `unsubscribe_token` (unique), `created_at`, `confirmed_at`
+  - `POST /api/subscribe` — insert subscriber, send double opt-in confirmation email
+  - `GET /api/subscribe/confirm?token=xxx` — mark confirmed, show success page
+  - `GET /api/unsubscribe?token=xxx` — one-click unsubscribe (CAN-SPAM required)
+  - Newsletter trigger in approve action (`+page.server.js`) — when post flips to `published`, query all confirmed subscribers and send via Resend (same pattern as `notify.js`)
+  - Subscribe form: small email input in site footer or homepage

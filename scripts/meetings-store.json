@@ -1,5 +1,5 @@
 {
-  "last_synced": "2026-05-20T00:53:27.076Z",
+  "last_synced": "2026-05-29T12:22:32.895Z",
   "meetings": {
     "U70wAj9AUuk": {
       "video_id": "U70wAj9AUuk",
@@ -2651,6 +2651,132 @@
       "deleted_at": null,
       "scraped_at": "2026-05-17T20:49:30.860Z",
       "summarized_at": "2026-05-20T00:53:27.076Z"
+    },
+    "TiKsL_x_XUU": {
+      "video_id": "TiKsL_x_XUU",
+      "type": "Board of Trustees",
+      "date": "May 21 2026",
+      "youtube_url": "https://www.youtube.com/watch?v=TiKsL_x_XUU",
+      "hct_url": "https://hct.holland.mi.us/township-meeting-recordings/board-of-trustees-meeting-recordings/2409-board-of-trustees-5-21-2026",
+      "summary": "- **Consent Agenda Approved**: Board approved April 2026 meeting minutes, building permits ($13M+ in construction costs including Emanuel Baptist addition and Meyer renovations), fire department report (223 calls, retirement of 54-year firefighter Jim Degraph recognized), and sheriff report (1,218 calls for service). April expenditures totaled $2.438M with major sewer and water projects underway.\n- **Parking & Enforcement**: Steve Willard praised Ottawa County Sheriff's 10x increase in exhaust enforcement (6 citations in 458 days vs. 4 in prior 378 days). He proposed time-based overnight parking restrictions (2-6 AM) as alternative to current unenforceable blanket ban, requesting attorney opinion and future board consideration.\n- **Governance Principles Motion Failed**: Board could not reach consensus on reaffirming 'Charter Township Principles of Governance' due to concerns about consensus language, time limits on discussion, and conflict of interest provisions. Motion was withdrawn; supervisor to revisit with revisions.\n- **West Street Traffic Control**: Board unanimously approved resolution supporting Ottawa County Road Commission's conversion of West Street, Center Street, and East Street to one-way traffic (west to east) to enable parking lot development on former Lemon Fresh Cleaners site, consistent with master plan vision.\n- **Zoning Text Amendments (First Reading)**: (A) My House Ministries' rezone of 352 Beline Road from Moderate Density to R2A for transitional women's housing; (B) River's Hardware request to allow seasonal outdoor displays/sales in C1 district (April-October) via special land use—4-1 planning commission approval. River's faces zoning citation for bulk goods; staff directed to extend deadline pending final approval.\n- **Capital Projects Approved**: (1) Parks parking lot resurfacing: $56,650 (Tulip City Asphalt low bid $51,490 + contingency); (2) Pathway reconstruction: $1,135,000 (Site Works Solutions $943,675 + engineering/contingency); (3) Assessing vehicle: $24,995 (2026 Chevy Trailblazer from Burggee Chevrolet). All passed via roll-call vote 6-0-1 (one absent).\n- **Dave DeYoung's Extended Public Comment on Selective Enforcement**: DeYoung delivered 27-minute statement alleging systematic selective enforcement by township staff regarding Lawn Avenue road abandonment, parking citations, storage shed setbacks, and alleged discriminatory treatment. He criticized attorney Ron Bolie's legal update for omitting staff's role in blocking abandonment, alleged staff opposed abandonment to target DeYoung personally, and announced plans to publish all correspondence and meeting videos on a website and social media to expose alleged misconduct. He demanded board investigation and legal guidance on how to address selective enforcement claims.\n- **Attorney Bolie's Response**: Bolie clarified he represented township (governed by board), was not involved in subsequent litigation (handled by former partner), and that his prior work was pre-litigation negotiation where parties could not reach consensus. He stated the court settlement resolved the matter and that DeYoung is now asking the board to ignore the settlement. Bolie also noted conflict of interest: when a board member pursues personal matters, they should sit in audience as public member, not participate as trustee.\n- **Board Discussion on DeYoung's Concerns**: Board members discussed potential solutions; attorney indicated court order requires township compliance (access easement, removal of barriers/signs, equal parking enforcement). Supervisor instructed DeYoung to schedule any personal attorney meeting independently; township matters should flow through superintendent. Board agreed to focus on compliance with existing court order. No resolution reached.",
+      "highlights": [
+        {
+          "topic": "Parking Enforcement Shift Praised",
+          "quote": "Ottawa County Sheriff's Office has shown a meaningful shift in exhaust enforcement in Holland Township. Foya data shows that six citations in four 58 days compared to four for the prior 378 days. That's roughly a 10x increase across six different deputies.",
+          "timestamp_sec": 78
+        },
+        {
+          "topic": "Proposed Time-Based Parking Restriction",
+          "quote": "A timebased overnight restriction, something like 2 to six, is targeted, clear, and uniformally enforceable. The city of Holland does this, and we have the legal authority under Michigan Common Law 257.675",
+          "timestamp_sec": 159
+        },
+        {
+          "topic": "Governance Principles Motion Withdrawn",
+          "quote": "I'm not sure consensus is always the goal. I think that we we are here to represent the township as we understand it and sometimes we disagree and I think disagreement can be legit.",
+          "timestamp_sec": 1040
+        },
+        {
+          "topic": "West Street One-Way Conversion Approved",
+          "quote": "a one-way traffic flow is required in in order for the design of this parking lot to move forward. So that has been established and as the um graphic in the letter uh indicates it'll be one way going from west to east",
+          "timestamp_sec": 1728
+        },
+        {
+          "topic": "River's Hardware Seasonal Displays First Reading",
+          "quote": "I'm requesting approval of a text amendment to section 9.20 to allow seasonal outdoor displays and sales within the C1 neighborhood commercially zoned district between April 1st and October 31st subject to special land use approval.",
+          "timestamp_sec": 2480
+        },
+        {
+          "topic": "DeYoung Alleges Selective Enforcement Pattern",
+          "quote": "Holland Charter Township staff selectively enforced ordinances against my family again and again. First came the absurd in absurd incomplete abandonment of Law and Avenue. Then came setback requirements for our storage shed that no other resident appears to have been forced to follow",
+          "timestamp_sec": 4947
+        },
+        {
+          "topic": "DeYoung on Harassment Ending After Election",
+          "quote": "The harassment ended almost instantly. I hadn't even been sworn in yet. Would anyone care to explain why the harassment ended immediately after I was elected? I will. The answer is obvious because it never should have been happening in the first place.",
+          "timestamp_sec": 5071
+        },
+        {
+          "topic": "DeYoung Announces Public Transparency Initiative",
+          "quote": "I am currently working with a team to develop a website where I will publish every email that I have ever sent to this board regarding selective enforcement as well as every email moving forward. I will be posting video clips from every board meeting where I have discussed selective enforcement",
+          "timestamp_sec": 5219
+        },
+        {
+          "topic": "Bolie Denies Pre-Litigation Board Vote to Abandon",
+          "quote": "I have no idea of the township board ever deciding to abandon lawn avenue and then somehow I stopped it or somebody stopped it. I don't know about that. My indication, my file says we talked about it. We could not reach agreement",
+          "timestamp_sec": 5596
+        },
+        {
+          "topic": "Church Advocates for Site Visit Solution",
+          "quote": "maybe we can all go over to Dave's house, have a meeting, and just see what he's talking about. Maybe if eyes, visual eyes, and Attorney Bulgi, I I know maybe you might disagree with me. I'm trying to offer a solution that This is ridiculous.",
+          "timestamp_sec": 5916
+        }
+      ],
+      "deleted_at": null,
+      "scraped_at": "2026-05-29T12:21:13.526Z",
+      "summarized_at": "2026-05-29T12:22:19.423Z"
+    },
+    "VXCS9jDXbnw": {
+      "video_id": "VXCS9jDXbnw",
+      "type": "Zoning Board of Appeals",
+      "date": "May 26 2026",
+      "youtube_url": "https://www.youtube.com/watch?v=VXCS9jDXbnw",
+      "hct_url": "https://hct.holland.mi.us/township-meeting-recordings/zoning-board-of-appeals-meeting-recordings/2410-zoning-board-of-appeals-meeting-05-26-2026",
+      "summary": "• **Meeting called to order at 5:30 PM** with all ZBA members present; April 28 meeting minutes approved via voice vote after discussion of stipulations regarding affidavit requirements.\n• **First case (645 Douglas Avenue / 19 North Division):** Fab Leasing sought variance for depth-to-width ratio (5:1 vs. 4:1 required) to split off a residential house from commercial hardware store property. Board found exceptional circumstances due to unique historical situation (house existed ~80 years on commercial lot) and approved the variance with stipulations requiring barn removal and gravel driveway improvements.\n• **Second case (10671 Chicago Drive):** Kevin Nash/FPH requested six variances to create flag lot with 22-foot easement (vs. 66-foot required) and reduced setbacks to develop rear residential lot. Public comment strongly opposed (neighbors Jerry Vandenberg, Katrina Perez, and Cecilia Garza cited privacy, wildlife habitat concerns, driveway proximity). Board denied variances 1, 2, 5, and 6; approved variances 3 and 4; and denied variance 6 on a separate vote—effectively killing the project.\n• **Notable discussion:** Board member Jack Vandermillan noted the driveway would come within 5.2 feet of existing house, expressing concerns about neighbor impacts. Applicant emphasized tree replanting efforts and economic development benefits, but board consensus rejected the plan as contrary to ordinance spirit and harmful to adjacent properties.",
+      "highlights": [
+        {
+          "topic": "April minutes approval with stipulation clarification",
+          "quote": "It's not a special stipulation. is an automatic. It has to be done.",
+          "timestamp_sec": 107
+        },
+        {
+          "topic": "Fab Leasing barn removal commitment",
+          "quote": "the soon as they get word of all the approvals that the next call is to the excavator to take care of that",
+          "timestamp_sec": 456
+        },
+        {
+          "topic": "Approval of first variance (645 Douglas)",
+          "quote": "I will make a motion to approve as submitted, including the stipulations of the removal of the barn and for the gravel drive",
+          "timestamp_sec": 1410
+        },
+        {
+          "topic": "Public opposition to Chicago Drive project",
+          "quote": "I am writing to formally state my opposition to the non-use variances requested for 10671 Chicago. I am the owner and long-term resident of the adjacent property at 10681 Chicago where I've lived for more than 50 years.",
+          "timestamp_sec": 3302
+        },
+        {
+          "topic": "Neighbor concerns about driveway proximity",
+          "quote": "basically that's the neighbor's driveway within 5t of my house front corner. I take a look at that. there.",
+          "timestamp_sec": 2390
+        },
+        {
+          "topic": "Ecological habitat concerns from public",
+          "quote": "Great horned owls have nested and raised young in this exact location for many years along with numerous other species. After monitoring this habitat for more than 50 years, I believe it would be irresponsible to disrupt such a rare natural setting within our community.",
+          "timestamp_sec": 3392
+        },
+        {
+          "topic": "Board analysis: practical difficulties vs. new development",
+          "quote": "this is different from the situation we just considered. We had a long standing use it was residential behind property. what's being proposed is new development",
+          "timestamp_sec": 4001
+        },
+        {
+          "topic": "Vote denying first Chicago Drive variance (easement width)",
+          "quote": "Russ Borismo, yes. Elliot Church, yes. Bob Dere, yes. Ross Dere, yes. Jack Vandermillan, no.",
+          "timestamp_sec": 4612
+        },
+        {
+          "topic": "Approval of street surface variance",
+          "quote": "Okay, that one has been approved. Uh, number four, relief from the paving specifications for a private street",
+          "timestamp_sec": 5006
+        },
+        {
+          "topic": "Final votes denying setback variances",
+          "quote": "Okay, it's been denied.",
+          "timestamp_sec": 5111
+        }
+      ],
+      "deleted_at": null,
+      "scraped_at": "2026-05-29T12:21:30.339Z",
+      "summarized_at": "2026-05-29T12:22:32.895Z"
     }
   }
 }

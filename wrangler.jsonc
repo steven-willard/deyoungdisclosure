@@ -20,12 +20,21 @@
 		}
 	],
 	"vars": {
-		"FB_PAGE_ID": "1173409709178682"
+		"FB_PAGE_ID": "1256065217579499"
 	},
 	"observability": {
 		"logs": {
 			"enabled": true,
 			"invocation_logs": true
 		}
-	}
+	},
+	"routes": [
+		{
+			"pattern": "deyoungdisclosure.com",
+			"zone_name": "deyoungdisclosure.com",
+			"custom_domain": true,
+			"enabled": true,
+			"previews_enabled": false
+		}
+	]
 }
