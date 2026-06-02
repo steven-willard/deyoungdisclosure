@@ -1,6 +1,6 @@
 # DeYoung Disclosure — TODO
 
-Last updated: 2026-05-24
+Last updated: 2026-06-02
 
 ---
 
@@ -32,7 +32,7 @@ Last updated: 2026-05-24
 - [x] **Contact form + inbox** — fully operational. Constituent messages stored in KV, Dave notified via Resend at dave@davedeyoung.com with full message. Admin inbox at /admin/inbox shows permanent archive with expand/delete. Delete is session-protected with confirm dialog.
 - [x] **Post approval notification email** — fires on pending_approval from both compose form and API. Shared `sendPostApprovalEmail` in `src/lib/server/notify.js`. Email to `APPROVAL_NOTIFY_EMAIL` const (rockerw@live.com for testing → dave@davedeyoung.com on handoff). Markdown body rendered as HTML, social copy included if present.
 - [x] **Approve/reject gated to OWNER_EMAIL** — only Dave can approve or reject. Steven sees "Awaiting Dave's approval." Non-owners cannot trigger either action.
-- [x] **Reject with edits** — Dave rejects via dashboard, attaches a `dave_note`. SMM skill queries `GET /api/posts?state=rejected` to surface notes and iterate.
+- [x] **Reject with reason** — Dave rejects via dashboard with optional reason text field. Stored as `dave_note` in KV + post_transitions. SMM skill queries `GET /api/posts?state=rejected` to surface notes and iterate.
 - [x] **Markdown editor for compose** — live split-pane editor with toolbar (bold, italic, headings, blockquote, inline/block code, link, bullet/numbered list, HR). Toolbar applies to all selected lines for list prefixes.
 - [x] **Surface meeting records in compose** — searchable/filterable meeting panel at bottom of compose. Expand to see highlights, click to inject blockquote + timestamp link or plain meeting link at cursor position.
 - [x] **Image URL preview in compose** — live thumbnail below image URL field. Error message if URL fails to load.
@@ -78,10 +78,4 @@ Last updated: 2026-05-24
 - [ ] **SMS fallback for Dave** — if a post sits in `pending_approval` for 24h without action, send Dave an SMS reminder.
 - [ ] **Public post search** — full-text search on the posts archive.
 - [ ] **Nextdoor integration** — Nextdoor doesn't have a public API, so this would be manual or clipboard-copy from the skill output.
-- [ ] **Email newsletter** — opt-in subscriber list. Residents enter email on the public site, get notified when Dave publishes a post. Resend free tier (3,000/month, 100/day) is sufficient until the list hits triple digits.
-  - D1 schema: `subscribers` table — `id`, `email` (unique), `confirmed` (bool), `confirm_token`, `unsubscribe_token` (unique), `created_at`, `confirmed_at`
-  - `POST /api/subscribe` — insert subscriber, send double opt-in confirmation email
-  - `GET /api/subscribe/confirm?token=xxx` — mark confirmed, show success page
-  - `GET /api/unsubscribe?token=xxx` — one-click unsubscribe (CAN-SPAM required)
-  - Newsletter trigger in approve action (`+page.server.js`) — when post flips to `published`, query all confirmed subscribers and send via Resend (same pattern as `notify.js`)
-  - Subscribe form: small email input in site footer or homepage
+- [x] **Email newsletter** — fully live. Double opt-in subscribe form in site footer. Confirmation email requires button click (not GET) to prevent email scanner pre-confirmation. Newsletter blasts on post approval to all confirmed subscribers. CAN-SPAM compliant unsubscribe. Resend free tier: 3,000/month, 100/day — upgrade to $20/month when subscriber list exceeds ~95.
