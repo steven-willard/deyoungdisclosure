@@ -281,6 +281,29 @@ Authorization: Bearer <SMM_AI_API_KEY>
 
 ---
 
+### 8. Newsletter Subscribers
+
+Check subscriber count or list confirmed subscribers.
+
+```
+GET /api/subscribers
+Authorization: Bearer <SMM_AI_API_KEY>
+```
+
+Response shape:
+```json
+{ "subscribers": [{ "id", "email", "confirmed", "created_at", "confirmed_at" }], "total": 12, "confirmed": 10 }
+```
+
+**Key facts for context:**
+- Subscribers get an email every time Dave approves a post — automatic, no action needed
+- Double opt-in: they click a confirm button in the email (not just a link — prevents email scanner pre-confirmation)
+- CAN-SPAM compliant: every newsletter includes a one-click unsubscribe link
+- Resend free tier: **3,000 emails/month, 100/day** — upgrade needed (~$20/month) when confirmed list exceeds ~95
+- All email types (approval notifications, subscriber confirmations, newsletter blasts) pull from the same daily pool
+
+---
+
 ## Output Standards
 - Match Dave's voice exactly — bold, direct, never a press release
 - Never fabricate facts, quotes, or statistics — only use what's in context or provided by the user
