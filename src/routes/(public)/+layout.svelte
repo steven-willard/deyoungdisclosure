@@ -17,6 +17,38 @@
 	function isActive(href) {
 		return $page.url.pathname === href || ($page.url.pathname.startsWith(href) && href !== '/');
 	}
+
+	// Subscribe form
+	let subEmail = $state('');
+	let subMessage = $state('');
+	let subLoading = $state(false);
+
+	async function handleSubscribe(e) {
+		e.preventDefault();
+		if (subLoading) return;
+		subLoading = true;
+		subMessage = '';
+		try {
+			const res = await fetch('/api/subscribe', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: subEmail })
+			});
+			const data = await res.json();
+			if (data.ok) {
+				subEmail = '';
+				subMessage = data.already
+					? 'You\u2019re already subscribed!'
+					: 'Check your email to confirm your subscription.';
+			} else {
+				subMessage = data.error || 'Something went wrong. Please try again.';
+			}
+		} catch {
+			subMessage = 'Something went wrong. Please try again.';
+		} finally {
+			subLoading = false;
+		}
+	}
 </script>
 
 <div class="min-h-screen flex flex-col bg-primary text-text">
@@ -134,7 +166,33 @@
 				</div>
 
 			</div>
-			<p class="text-muted text-xs mt-8 border-t border-white/10 pt-6">
+			<!-- Subscribe -->
+		<div class="mt-8 pt-6 border-t border-white/10">
+			<p class="text-sm text-muted mb-3">Get notified when Dave publishes a new post.</p>
+			<form onsubmit={handleSubscribe} class="flex flex-col sm:flex-row gap-2 max-w-sm">
+				<input
+					type="email"
+					placeholder="your@email.com"
+					bind:value={subEmail}
+					required
+					class="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent"
+				/>
+				<button
+					type="submit"
+					disabled={subLoading}
+					class="px-4 py-2 bg-accent text-primary text-sm font-semibold rounded hover:bg-accent/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+				>
+					{subLoading ? 'Sending\u2026' : 'Subscribe'}
+				</button>
+			</form>
+			{#if subMessage}
+				<p class="text-sm mt-2 {subMessage.startsWith('Check') || subMessage.includes('already') ? 'text-accent' : 'text-red-400'}">
+					{subMessage}
+				</p>
+			{/if}
+		</div>
+
+		<p class="text-muted text-xs mt-8 border-t border-white/10 pt-6">
 				© {new Date().getFullYear()} Dave DeYoung · Holland Charter Township Trustee · deyoungdisclosure.com
 				<span class="block mt-1 text-white/20">Built and maintained by Steven Willard II, Holland Township resident</span>
 			</p>

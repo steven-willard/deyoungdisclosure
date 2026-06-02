@@ -17,6 +17,8 @@ Read the following files before doing anything else.
 - `_context/background/Lawsuit-Situation-CRITICAL.md` — active legal context, handle with care
 - `_context/background/Selective-Enforcement-Incident.md` — the core incident that drove Dave to run
 - `_context/background/Selective-Enforcement-Incident-Reference.md`
+- `_context/background/Dave-Drive-Timeline.md` — comprehensive 2009–2026 timeline from Dave's personal emails (USB drive analysis, May 2026) — most complete factual record available
+- `_context/background/Dave-Drive-Context.md` — key people, properties, ordinances, strategic framing, and hard stops from USB drive analysis
 
 **Campaign (load for strategic or directional posts):**
 - `_context/campaign/Campaign-Direction.md`

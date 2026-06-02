@@ -94,6 +94,22 @@ export const actions = {
 			// D1 not available
 		}
 
+		// Newsletter blast — non-blocking, approval already saved
+		try {
+			const subs = await platform.env.DB.prepare(
+				"SELECT email, unsubscribe_token FROM subscribers WHERE confirmed = 1"
+			).all();
+			if (subs.results?.length) {
+				const { sendNewsletterEmail } = await import('$lib/server/newsletter.js');
+				for (const sub of subs.results) {
+					await sendNewsletterEmail(post, sub.email, sub.unsubscribe_token, platform.env.RESEND_API_KEY);
+				}
+				console.log(`Newsletter sent to ${subs.results.length} subscriber(s) for post ${postId}`);
+			}
+		} catch (err) {
+			console.error('Newsletter blast failed:', err?.message);
+		}
+
 		// Publish to social platforms — non-blocking, approval already saved
 		if (post.platforms?.includes('Facebook')) {
 			try {
