@@ -77,7 +77,7 @@
 					{/if}
 
 					{#if isOwner}
-						<div class="flex gap-3">
+						<div class="flex flex-col gap-3">
 							<form method="POST" action="?/approve" use:enhance={() => {
 								submittingId = post.id;
 								return async ({ update }) => { await update(); submittingId = null; };
@@ -108,7 +108,7 @@
 									name="note"
 									placeholder="Reason (optional)..."
 									disabled={submittingId === post.id}
-									class="w-44 bg-primary border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-red-500/50 transition-colors disabled:opacity-50"
+									class="flex-1 bg-primary border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-red-500/50 transition-colors disabled:opacity-50"
 								/>
 								<button
 									type="submit"
