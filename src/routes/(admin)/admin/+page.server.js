@@ -130,6 +130,7 @@ export const actions = {
 	reject: async ({ request, platform }) => {
 		const data = await request.formData();
 		const postId = data.get('postId')?.toString();
+		const note = data.get('note')?.toString() ?? '';
 		if (!postId) return;
 
 		const kv3 = platform.env.DEYOUNG_KV;
@@ -149,6 +150,7 @@ export const actions = {
 		const now = new Date().toISOString();
 		post.state = 'rejected';
 		post.updated_at = now;
+		post.dave_note = note || null;
 
 		await kv.put(`posts:${postId}`, JSON.stringify(post));
 
@@ -156,7 +158,7 @@ export const actions = {
 			await platform.env.DB.prepare(
 				`INSERT INTO post_transitions (post_id, from_state, to_state, actor, note, transitioned_at)
 				 VALUES (?, ?, ?, ?, ?, ?)`
-			).bind(postId, 'pending_approval', 'rejected', 'dave', null, now).run();
+			).bind(postId, 'pending_approval', 'rejected', 'dave', note || null, now).run();
 		} catch {
 			// D1 not available
 		}

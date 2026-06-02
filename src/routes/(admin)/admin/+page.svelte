@@ -101,12 +101,19 @@
 							<form method="POST" action="?/reject" use:enhance={() => {
 								submittingId = post.id;
 								return async ({ update }) => { await update(); submittingId = null; };
-							}}>
+							}} class="flex gap-2">
 								<input type="hidden" name="postId" value={post.id} />
+								<input
+									type="text"
+									name="note"
+									placeholder="Reason (optional)..."
+									disabled={submittingId === post.id}
+									class="w-44 bg-primary border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-red-500/50 transition-colors disabled:opacity-50"
+								/>
 								<button
 									type="submit"
 									disabled={submittingId === post.id}
-									class="px-4 py-1.5 border border-red-500/40 text-red-400 rounded text-xs font-medium hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+									class="px-4 py-1.5 border border-red-500/40 text-red-400 rounded text-xs font-medium hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
 								>
 									Reject
 								</button>

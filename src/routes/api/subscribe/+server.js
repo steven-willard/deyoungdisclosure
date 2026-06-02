@@ -36,7 +36,7 @@ export async function POST({ request, platform }) {
 	if (existing) {
 		// Pending — resend confirmation
 		try {
-			sendConfirmationEmail(email, existing.confirm_token, platform.env.RESEND_API_KEY);
+			await sendConfirmationEmail(email, existing.confirm_token, platform.env.RESEND_API_KEY);
 		} catch { /* non-blocking */ }
 		return json({ ok: true, resent: true });
 	}
@@ -57,7 +57,7 @@ export async function POST({ request, platform }) {
 	}
 
 	try {
-		sendConfirmationEmail(email, confirmToken, platform.env.RESEND_API_KEY);
+		await sendConfirmationEmail(email, confirmToken, platform.env.RESEND_API_KEY);
 	} catch { /* non-blocking */ }
 
 	return json({ ok: true });
