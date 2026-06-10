@@ -22,8 +22,8 @@
 </svelte:head>
 
 <div class="min-h-screen bg-primary flex">
-	<!-- Sidebar -->
-	<aside class="w-56 bg-surface border-r border-white/10 flex flex-col shrink-0">
+	<!-- Sidebar — desktop only -->
+	<aside class="hidden md:flex w-56 bg-surface border-r border-white/10 flex-col shrink-0">
 		<div class="px-5 py-5 border-b border-white/10">
 			<p class="font-heading font-bold text-accent text-sm tracking-wide">DeYoung Admin</p>
 		</div>
@@ -54,7 +54,7 @@
 
 	<!-- Main content -->
 	<div class="flex-1 flex flex-col min-w-0">
-		<header class="h-14 bg-surface border-b border-white/10 flex items-center px-6">
+		<header class="h-14 bg-surface border-b border-white/10 flex items-center justify-between px-4 md:px-6">
 			<h1 class="text-sm font-medium text-text/60">
 				{#if $page.url.pathname === '/admin'}Dashboard
 				{:else if $page.url.pathname === '/admin/compose'}Compose Post
@@ -63,9 +63,31 @@
 				{:else}Admin
 				{/if}
 			</h1>
+			<div class="flex items-center gap-4 md:hidden">
+				<a href="/" class="text-xs text-muted hover:text-text transition-colors">← Site</a>
+				{#if data?.user}
+					<button onclick={logout} class="text-xs text-red-400 hover:text-red-300 transition-colors">
+						Sign out
+					</button>
+				{/if}
+			</div>
 		</header>
-		<main class="flex-1 p-6 overflow-auto">
+		<main class="flex-1 p-4 md:p-6 overflow-auto pb-24 md:pb-6">
 			{@render children()}
 		</main>
 	</div>
+
+	<!-- Bottom nav — mobile only -->
+	<nav class="fixed bottom-0 left-0 right-0 bg-surface border-t border-white/10 flex md:hidden z-50">
+		{#each navItems as item}
+			<a
+				href={item.href}
+				class="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors
+					{$page.url.pathname === item.href ? 'text-accent' : 'text-text/50 hover:text-text'}"
+			>
+				<span class="text-xl leading-none">{item.icon}</span>
+				<span class="text-[10px] font-medium">{item.label}</span>
+			</a>
+		{/each}
+	</nav>
 </div>

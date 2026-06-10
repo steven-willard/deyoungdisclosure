@@ -7,9 +7,9 @@ export async function load({ platform, request }) {
 	const ownerEmail = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
 	const isOwner = !!(session?.email && session.email.trim().toLowerCase() === ownerEmail);
 
-	// Fetch pending posts from KV
 	const postsList = await kv.list({ prefix: 'posts:' });
 	const pendingPosts = [];
+	const fbErrorPosts = [];
 
 	for (const key of postsList.keys) {
 		const raw = await kv.get(key.name);
@@ -17,13 +17,14 @@ export async function load({ platform, request }) {
 		const post = JSON.parse(raw);
 		if (post.state === 'pending_approval') {
 			pendingPosts.push(post);
+		} else if (post.state === 'published' && post.fb_publish_error) {
+			fbErrorPosts.push(post);
 		}
 	}
 
-	// Sort pending newest first
 	pendingPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+	fbErrorPosts.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-	// Recent inbox messages (last 3)
 	const contactList = await kv.list({ prefix: 'contact:' });
 	const recentMessages = [];
 	for (const key of contactList.keys.slice(0, 3)) {
@@ -32,7 +33,6 @@ export async function load({ platform, request }) {
 	}
 	recentMessages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-	// Quick stats from D1
 	const stats = { totalPublished: 0, totalPending: pendingPosts.length, totalMessages: contactList.keys.length };
 	try {
 		const result = await platform.env.DB.prepare(
@@ -43,7 +43,7 @@ export async function load({ platform, request }) {
 		// D1 may not be set up yet
 	}
 
-	return { pendingPosts, recentMessages, stats, isOwner };
+	return { pendingPosts, fbErrorPosts, recentMessages, stats, isOwner, isAdmin: !!session };
 }
 
 export const actions = {
@@ -53,16 +53,15 @@ export const actions = {
 		const note = data.get('note')?.toString() ?? '';
 		if (!postId) return;
 
-		const kv2 = platform.env.DEYOUNG_KV;
-		const sessionId2 = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
-		const { getSession: gs } = await import('$lib/server/auth.js');
-		const session2 = await gs(kv2, sessionId2);
-		const ownerEmail2 = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
-		if (!session2 || session2.email.trim().toLowerCase() !== ownerEmail2) {
+		const kv = platform.env.DEYOUNG_KV;
+		const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+		const { getSession } = await import('$lib/server/auth.js');
+		const session = await getSession(kv, sessionId);
+		const ownerEmail = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+		if (!session || session.email.trim().toLowerCase() !== ownerEmail) {
 			return { error: 'Only Dave can approve posts.' };
 		}
 
-		const kv = platform.env.DEYOUNG_KV;
 		const raw = await kv.get(`posts:${postId}`);
 		if (!raw) return;
 
@@ -74,7 +73,6 @@ export const actions = {
 
 		await kv.put(`posts:${postId}`, JSON.stringify(post));
 
-		// Persist to D1
 		try {
 			await platform.env.DB.prepare(
 				`INSERT INTO posts (id, title, body, tags, image_url, platforms, state, created_by, created_at, updated_at, dave_note)
@@ -94,7 +92,6 @@ export const actions = {
 			// D1 not available
 		}
 
-		// Newsletter blast — non-blocking, approval already saved
 		try {
 			const subs = await platform.env.DB.prepare(
 				"SELECT email, unsubscribe_token FROM subscribers WHERE confirmed = 1"
@@ -110,21 +107,53 @@ export const actions = {
 			console.error('Newsletter blast failed:', err?.message);
 		}
 
-		// Publish to social platforms — non-blocking, approval already saved
 		if (post.platforms?.includes('Facebook')) {
 			try {
 				const { publishToFacebook } = await import('$lib/server/social.js');
 				const result = await publishToFacebook(post, platform.env);
-				// Store FB post ID back on the record for reference
 				post.fb_post_id = result.id;
+				post.fb_publish_error = null;
 				await kv.put(`posts:${postId}`, JSON.stringify(post));
 			} catch (err) {
-				// Social publish failure is non-blocking
 				console.error('Facebook publish failed:', err?.message);
+				post.fb_publish_error = err?.message ?? 'Unknown error';
+				await kv.put(`posts:${postId}`, JSON.stringify(post));
 			}
 		}
 
 		return { success: true };
+	},
+
+	retryFb: async ({ request, platform }) => {
+		const data = await request.formData();
+		const postId = data.get('postId')?.toString();
+		if (!postId) return;
+
+		const kv = platform.env.DEYOUNG_KV;
+		const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+		const { getSession } = await import('$lib/server/auth.js');
+		const session = await getSession(kv, sessionId);
+		if (!session) {
+			return { error: 'You must be logged in to retry posts.' };
+		}
+
+		const raw = await kv.get(`posts:${postId}`);
+		if (!raw) return;
+		const post = JSON.parse(raw);
+
+		try {
+			const { publishToFacebook } = await import('$lib/server/social.js');
+			const result = await publishToFacebook(post, platform.env);
+			post.fb_post_id = result.id;
+			post.fb_publish_error = null;
+			await kv.put(`posts:${postId}`, JSON.stringify(post));
+			return { success: true };
+		} catch (err) {
+			console.error('Facebook retry failed:', err?.message);
+			post.fb_publish_error = err?.message ?? 'Unknown error';
+			await kv.put(`posts:${postId}`, JSON.stringify(post));
+			return { error: err?.message };
+		}
 	},
 
 	reject: async ({ request, platform }) => {
@@ -133,16 +162,15 @@ export const actions = {
 		const note = data.get('note')?.toString() ?? '';
 		if (!postId) return;
 
-		const kv3 = platform.env.DEYOUNG_KV;
-		const sessionId3 = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
-		const { getSession: gs3 } = await import('$lib/server/auth.js');
-		const session3 = await gs3(kv3, sessionId3);
-		const ownerEmail3 = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
-		if (!session3 || session3.email.trim().toLowerCase() !== ownerEmail3) {
+		const kv = platform.env.DEYOUNG_KV;
+		const sessionId = request.headers.get('cookie')?.match(/session=([^;]+)/)?.[1];
+		const { getSession } = await import('$lib/server/auth.js');
+		const session = await getSession(kv, sessionId);
+		const ownerEmail = (platform.env.OWNER_EMAIL ?? '').trim().toLowerCase();
+		if (!session || session.email.trim().toLowerCase() !== ownerEmail) {
 			return { error: 'Only Dave can reject posts.' };
 		}
 
-		const kv = platform.env.DEYOUNG_KV;
 		const raw = await kv.get(`posts:${postId}`);
 		if (!raw) return;
 

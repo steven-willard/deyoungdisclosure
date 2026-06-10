@@ -3,9 +3,10 @@
 	import { marked } from 'marked';
 
 	let { data } = $props();
-	let { pendingPosts, recentMessages, stats, isOwner } = $derived(data);
+	let { pendingPosts, fbErrorPosts, recentMessages, stats, isOwner, isAdmin } = $derived(data);
 
 	let submittingId = $state(null);
+	let retryingId = $state(null);
 </script>
 
 <!-- Stats row -->
@@ -24,6 +25,38 @@
 	</div>
 </div>
 
+<!-- Facebook publish errors -->
+{#if fbErrorPosts?.length > 0}
+	<div class="mb-8 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+		<h2 class="font-heading text-sm font-bold text-red-400 mb-3">⚠ Facebook Publish Failed</h2>
+		<div class="space-y-3">
+			{#each fbErrorPosts as post}
+				<div class="flex items-start justify-between gap-3">
+					<div class="min-w-0">
+						<p class="text-text text-sm font-medium truncate">{post.title}</p>
+						<p class="text-red-400/70 text-xs mt-0.5 break-words">{post.fb_publish_error}</p>
+					</div>
+					{#if isAdmin}
+						<form method="POST" action="?/retryFb" use:enhance={() => {
+							retryingId = post.id;
+							return async ({ update }) => { await update(); retryingId = null; };
+						}}>
+							<input type="hidden" name="postId" value={post.id} />
+							<button
+								type="submit"
+								disabled={retryingId === post.id}
+								class="text-xs px-3 py-1.5 border border-red-500/40 text-red-400 rounded hover:bg-red-500/10 transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{retryingId === post.id ? 'Retrying…' : 'Retry FB'}
+							</button>
+						</form>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
+{/if}
+
 <!-- Pending approvals -->
 <div class="mb-8">
 	<h2 class="font-heading text-lg font-bold text-text mb-4">Pending Approval</h2>
@@ -36,7 +69,6 @@
 		<div class="space-y-4">
 			{#each pendingPosts as post (post.id)}
 				<div class="bg-surface rounded-lg border border-white/10 p-5">
-					<!-- Image preview -->
 					{#if post.image_url}
 						<img src={post.image_url} alt={post.title} class="w-full rounded-lg mb-4 object-cover max-h-56" />
 					{/if}
@@ -56,7 +88,6 @@
 						</span>
 					</div>
 
-					<!-- Markdown-rendered body -->
 					<div class="post-body text-sm mb-4 max-h-64 overflow-y-auto border-t border-white/5 pt-3">
 						{@html marked.parse(post.body ?? '')}
 					</div>
