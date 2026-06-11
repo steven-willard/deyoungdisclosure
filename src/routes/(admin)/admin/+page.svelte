@@ -10,7 +10,7 @@
 </script>
 
 <!-- Stats row -->
-<div class="grid grid-cols-3 gap-4 mb-8">
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 	<div class="bg-surface rounded-lg border border-white/10 p-4">
 		<p class="text-muted text-xs mb-1">Pending Approval</p>
 		<p class="font-heading text-3xl font-bold text-accent">{stats.totalPending}</p>
@@ -22,6 +22,10 @@
 	<div class="bg-surface rounded-lg border border-white/10 p-4">
 		<p class="text-muted text-xs mb-1">Inbox Messages</p>
 		<p class="font-heading text-3xl font-bold text-text">{stats.totalMessages}</p>
+	</div>
+	<div class="bg-surface rounded-lg border border-white/10 p-4">
+		<p class="text-muted text-xs mb-1">Subscribers</p>
+		<p class="font-heading text-3xl font-bold text-text">{stats.totalSubscribers}</p>
 	</div>
 </div>
 

@@ -33,12 +33,14 @@ export async function load({ platform, request }) {
 	}
 	recentMessages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-	const stats = { totalPublished: 0, totalPending: pendingPosts.length, totalMessages: contactList.keys.length };
+	const stats = { totalPublished: 0, totalPending: pendingPosts.length, totalMessages: contactList.keys.length, totalSubscribers: 0 };
 	try {
-		const result = await platform.env.DB.prepare(
-			"SELECT COUNT(*) as count FROM posts WHERE state = 'published'"
-		).first();
-		stats.totalPublished = result?.count ?? 0;
+		const [publishedResult, subscriberResult] = await Promise.all([
+			platform.env.DB.prepare("SELECT COUNT(*) as count FROM posts WHERE state = 'published'").first(),
+			platform.env.DB.prepare("SELECT COUNT(*) as count FROM subscribers WHERE confirmed = 1").first()
+		]);
+		stats.totalPublished = publishedResult?.count ?? 0;
+		stats.totalSubscribers = subscriberResult?.count ?? 0;
 	} catch {
 		// D1 may not be set up yet
 	}
