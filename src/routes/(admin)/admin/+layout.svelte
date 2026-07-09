@@ -8,7 +8,8 @@
 		{ href: '/admin', label: 'Dashboard', icon: '⊞' },
 		{ href: '/admin/compose', label: 'Compose', icon: '✏' },
 		{ href: '/admin/posts', label: 'Posts', icon: '📋' },
-		{ href: '/admin/inbox', label: 'Inbox', icon: '✉' }
+		{ href: '/admin/inbox', label: 'Inbox', icon: '✉' },
+		{ href: '/admin/segments', label: 'My Segments', icon: '🎙' }
 	];
 
 	async function logout() {
@@ -60,6 +61,7 @@
 				{:else if $page.url.pathname === '/admin/compose'}Compose Post
 				{:else if $page.url.pathname === '/admin/posts'}Post History
 				{:else if $page.url.pathname === '/admin/inbox'}Contact Inbox
+				{:else if $page.url.pathname === '/admin/segments'}My Meeting Segments
 				{:else}Admin
 				{/if}
 			</h1>

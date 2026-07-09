@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS meetings (
   hct_url TEXT NOT NULL,
   summary TEXT,
   highlights TEXT NOT NULL DEFAULT '[]',
+  transcript_source TEXT NOT NULL DEFAULT 'youtube-captions',
+  speaker_map TEXT,
+  dave_segments TEXT,
   deleted_at TEXT,
   scraped_at TEXT NOT NULL,
   summarized_at TEXT

@@ -13,7 +13,12 @@ export async function GET({ request, platform, params }) {
 
 		if (!row) return json({ error: 'Not found' }, { status: 404 });
 
-		return json({ meeting: { ...row, highlights: JSON.parse(row.highlights ?? '[]') } });
+		return json({ meeting: {
+			...row,
+			highlights: JSON.parse(row.highlights ?? '[]'),
+			speaker_map: row.speaker_map ? JSON.parse(row.speaker_map) : null,
+			dave_segments: row.dave_segments ? JSON.parse(row.dave_segments) : null,
+		} });
 	} catch {
 		return json({ error: 'Database unavailable' }, { status: 503 });
 	}

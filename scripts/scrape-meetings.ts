@@ -1,5 +1,7 @@
 import { fetchTranscript } from "youtube-transcript";
 import { writeFileSync } from "fs";
+import { transcribeWithAssemblyAI, utterancesToSegments } from "./assemblyai-transcribe.js";
+import { identifySpeakers } from "./identify-speakers.js";
 
 const BASE = "https://hct.holland.mi.us";
 
@@ -8,6 +10,12 @@ const LISTING_PAGES = [
   { type: "Planning Commission", path: "/township-meeting-recordings/planning-commission-meeting-recordings" },
   { type: "Zoning Board of Appeals", path: "/township-meeting-recordings/zoning-board-of-appeals-meeting-recordings" },
 ];
+
+// Board of Trustees gets AssemblyAI (speaker diarization); others use free YouTube captions
+const ASSEMBLYAI_TYPES = new Set(["Board of Trustees"]);
+
+const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY ?? '';
+const ANTHROPIC_API_KEY = process.env.YOUTUBE_SUMMARIZER_API_KEY ?? '';
 
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url);
@@ -21,7 +29,6 @@ interface MeetingLink {
 }
 
 function extractMeetingLinks(html: string): MeetingLink[] {
-  // Match href + nearby date text in table rows
   const rowPattern = /<tr[\s\S]*?<\/tr>/g;
   const rows = html.match(rowPattern) ?? [];
   const seen = new Set<string>();
@@ -33,13 +40,10 @@ function extractMeetingLinks(html: string): MeetingLink[] {
     const path = hrefMatch[1];
     if (seen.has(path)) continue;
     seen.add(path);
-
-    // Try to pull a date from the row text
     const dateMatch = row.match(/(\w+ \d{1,2} \d{4})/);
     results.push({ path, date: dateMatch ? dateMatch[1] : extractDateFromSlug(path) });
   }
 
-  // Fallback: plain href scan if table approach found nothing
   if (results.length === 0) {
     const matches = html.matchAll(/href="(\/township-meeting-recordings\/[^"]+\/\d{4}-[^"]+)"/g);
     for (const m of matches) {
@@ -54,7 +58,6 @@ function extractMeetingLinks(html: string): MeetingLink[] {
 }
 
 function extractDateFromSlug(path: string): string | null {
-  // e.g. /.../ 2400-board-of-trustees-4-16-2026 → 2026-04-16
   const slug = path.split("/").pop() ?? "";
   const m = slug.match(/(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (!m) return null;
@@ -83,7 +86,14 @@ function extractVideoId(youtubeUrl: string): string | null {
 
 export interface TranscriptSegment {
   text: string;
-  offset: number; // seconds
+  offset: number;   // milliseconds
+}
+
+export interface AssemblyUtteranceStored {
+  speaker: string;
+  text: string;
+  start: number;    // ms
+  end: number;      // ms
 }
 
 export interface Meeting {
@@ -95,6 +105,9 @@ export interface Meeting {
   segments: TranscriptSegment[] | null;
   transcript: string | null;
   transcriptError: string | null;
+  transcript_source: 'youtube-captions' | 'assemblyai';
+  utterances: AssemblyUtteranceStored[] | null;
+  speaker_map: Record<string, string | null> | null;
   scraped_at: string;
 }
 
@@ -104,7 +117,12 @@ for (const listing of LISTING_PAGES) {
   console.log(`\nFetching ${listing.type} listing...`);
   const html = await fetchHtml(`${BASE}${listing.path}`);
   const links = extractMeetingLinks(html);
-  console.log(`  Found ${links.length} meetings`);
+  const useAssemblyAI = ASSEMBLYAI_TYPES.has(listing.type);
+  console.log(`  Found ${links.length} meetings [${useAssemblyAI ? 'AssemblyAI' : 'YouTube captions'}]`);
+
+  if (useAssemblyAI && !ASSEMBLYAI_API_KEY) {
+    console.warn(`  WARNING: ASSEMBLYAI_API_KEY not set — falling back to YouTube captions for ${listing.type}`);
+  }
 
   for (const { path, date } of links) {
     const hct_url = `${BASE}${path}`;
@@ -116,17 +134,48 @@ for (const listing of LISTING_PAGES) {
       let segments: TranscriptSegment[] | null = null;
       let transcript: string | null = null;
       let transcriptError: string | null = null;
+      let utterances: AssemblyUtteranceStored[] | null = null;
+      let speaker_map: Record<string, string | null> | null = null;
+      let transcript_source: 'youtube-captions' | 'assemblyai' = 'youtube-captions';
 
-      if (video_id) {
-        try {
-          console.log(`  [${date ?? "?"}] Fetching transcript...`);
-          const raw = await fetchTranscript(video_id);
-          segments = raw.map(s => ({ text: s.text, offset: Math.round(s.offset) }));
-          transcript = segments.map(s => s.text).join(" ").replace(/\s+/g, " ").trim();
-          console.log(`    ${transcript.length.toLocaleString()} chars, ${segments.length} segments`);
-        } catch (e: any) {
-          transcriptError = e?.message ?? String(e);
-          console.warn(`    No transcript: ${transcriptError}`);
+      if (video_id && youtube_url) {
+        if (useAssemblyAI && ASSEMBLYAI_API_KEY) {
+          // --- AssemblyAI path (Board of Trustees) ---
+          try {
+            console.log(`  [${date ?? "?"}] AssemblyAI transcription...`);
+            const result = await transcribeWithAssemblyAI(youtube_url, video_id, ASSEMBLYAI_API_KEY);
+
+            utterances = result.utterances.map(u => ({
+              speaker: u.speaker,
+              text: u.text,
+              start: u.start,
+              end: u.end,
+            }));
+
+            segments = utterancesToSegments(result.utterances);
+            transcript = result.transcript;
+            transcript_source = 'assemblyai';
+
+            if (ANTHROPIC_API_KEY) {
+              console.log(`    Identifying speakers...`);
+              speaker_map = await identifySpeakers(result.utterances, date, ANTHROPIC_API_KEY);
+            }
+          } catch (e: any) {
+            transcriptError = e?.message ?? String(e);
+            console.warn(`    AssemblyAI failed: ${transcriptError}`);
+          }
+        } else {
+          // --- YouTube captions path (Planning Commission, ZBA) ---
+          try {
+            console.log(`  [${date ?? "?"}] Fetching YouTube captions...`);
+            const raw = await fetchTranscript(video_id);
+            segments = raw.map(s => ({ text: s.text, offset: Math.round(s.offset) }));
+            transcript = segments.map(s => s.text).join(" ").replace(/\s+/g, " ").trim();
+            console.log(`    ${transcript.length.toLocaleString()} chars, ${segments.length} segments`);
+          } catch (e: any) {
+            transcriptError = e?.message ?? String(e);
+            console.warn(`    No transcript: ${transcriptError}`);
+          }
         }
       } else {
         console.log(`  [${date ?? "?"}] No YouTube URL found`);
@@ -141,6 +190,9 @@ for (const listing of LISTING_PAGES) {
         segments,
         transcript,
         transcriptError,
+        transcript_source,
+        utterances,
+        speaker_map,
         scraped_at: new Date().toISOString(),
       });
     } catch (e) {

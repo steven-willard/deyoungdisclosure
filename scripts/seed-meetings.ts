@@ -12,7 +12,6 @@
 import { readFileSync, existsSync } from "fs";
 
 const STORE_PATH = "scripts/meetings-store.json";
-
 const API_URL = "https://deyoungdisclosure.com";
 const API_KEY = process.env.DEYOUNG_API_KEY;
 
@@ -51,13 +50,19 @@ for (const m of summarized) {
         hct_url: m.hct_url,
         summary: m.summary,
         highlights: m.highlights ?? [],
+        transcript_source: m.transcript_source ?? 'youtube-captions',
+        speaker_map: m.speaker_map ?? null,
+        dave_segments: m.dave_segments ?? null,
         scraped_at: m.scraped_at,
         summarized_at: m.summarized_at,
       }),
     });
 
     if (res.ok) {
-      console.log(`  ✓ ${m.type} — ${m.date} (${m.video_id})`);
+      const tag = m.transcript_source === 'assemblyai' ? ' [AssemblyAI]' : '';
+      const daveCount = m.dave_segments?.length ?? 0;
+      const daveSuffix = daveCount > 0 ? ` — ${daveCount} Dave segments` : '';
+      console.log(`  ✓ ${m.type} — ${m.date} (${m.video_id})${tag}${daveSuffix}`);
       ok++;
     } else {
       const err = await res.text();
