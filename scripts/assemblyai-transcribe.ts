@@ -1,12 +1,14 @@
 /**
  * Download YouTube audio and transcribe via AssemblyAI with speaker diarization.
  * Used exclusively for Board of Trustees meetings.
+ *
+ * Uses yt-dlp for audio download (reliable, handles YouTube's anti-bot measures).
+ * Install: winget install yt-dlp.yt-dlp
  */
 
 import { AssemblyAI } from 'assemblyai';
-import ytdl from '@distube/ytdl-core';
-import { createWriteStream, unlinkSync, existsSync, mkdirSync } from 'fs';
-import { pipeline } from 'stream/promises';
+import { execSync } from 'child_process';
+import { unlinkSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { tmpdir } from 'os';
 
@@ -48,6 +50,44 @@ const KEYTERMS = [
   'deyoungdisclosure',
 ];
 
+// yt-dlp may live in WinGet's Links dir rather than on the system PATH
+const YTDLP_CANDIDATES = [
+  process.env.YTDLP_PATH,
+  'yt-dlp',
+  'C:\\Users\\rocke\\AppData\\Local\\Microsoft\\WinGet\\Links\\yt-dlp.exe',
+];
+
+function getYtDlpCmd(): string {
+  for (const candidate of YTDLP_CANDIDATES) {
+    if (!candidate) continue;
+    try {
+      execSync(`"${candidate}" --version`, { stdio: 'pipe' });
+      return candidate;
+    } catch {}
+  }
+  throw new Error('yt-dlp not found. Install with: winget install yt-dlp.yt-dlp');
+}
+
+function downloadAudio(youtubeUrl: string, videoId: string, tempDir: string): string {
+  const ytdlp = getYtDlpCmd();
+  // Output template without extension — yt-dlp appends .m4a after conversion
+  const outputTemplate = join(tempDir, videoId);
+
+  console.log(`    Downloading audio via yt-dlp...`);
+  execSync(
+    `"${ytdlp}" -x --audio-format m4a --no-playlist -q -o "${outputTemplate}.%(ext)s" "${youtubeUrl}"`,
+    { stdio: 'pipe' }
+  );
+
+  // Find the downloaded file (should be videoId.m4a)
+  const files = readdirSync(tempDir).filter(f => f.startsWith(videoId));
+  if (files.length === 0) throw new Error(`yt-dlp produced no output file for ${videoId}`);
+
+  const outPath = resolve(join(tempDir, files[0]));
+  console.log(`    Audio downloaded: ${files[0]}`);
+  return outPath;
+}
+
 export async function transcribeWithAssemblyAI(
   youtubeUrl: string,
   videoId: string,
@@ -57,14 +97,16 @@ export async function transcribeWithAssemblyAI(
 
   const tempDir = join(tmpdir(), 'deyoung-transcribe');
   if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true });
-  const tempPath = resolve(join(tempDir, `${videoId}.webm`));
 
-  console.log(`    Downloading audio from YouTube...`);
-  const audioStream = ytdl(youtubeUrl, { quality: 'highestaudio', filter: 'audioonly' });
-  await pipeline(audioStream, createWriteStream(tempPath));
-  console.log(`    Audio downloaded. Submitting to AssemblyAI...`);
+  // Clean up any leftover files for this video before starting
+  readdirSync(tempDir).filter(f => f.startsWith(videoId)).forEach(f => {
+    try { unlinkSync(join(tempDir, f)); } catch {}
+  });
+
+  const tempPath = downloadAudio(youtubeUrl, videoId, tempDir);
 
   try {
+    console.log(`    Submitting to AssemblyAI...`);
     const transcript = await client.transcripts.transcribe({
       audio: tempPath,
       speech_models: ['universal-3-5-pro', 'universal-2'],
@@ -98,9 +140,8 @@ export async function transcribeWithAssemblyAI(
       confidence: w.confidence ?? 1,
     }));
 
-    const wordCount = words.length.toLocaleString();
     const durationMin = Math.round((transcript.audio_duration ?? 0) / 60);
-    console.log(`    Transcription complete — ${wordCount} words, ~${durationMin} min audio`);
+    console.log(`    Transcription complete — ${words.length.toLocaleString()} words, ~${durationMin} min audio`);
 
     return { transcript: transcript.text ?? '', utterances, words };
   } finally {
