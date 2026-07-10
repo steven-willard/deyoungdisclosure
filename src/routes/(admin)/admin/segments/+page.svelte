@@ -1,6 +1,9 @@
 <script>
 	let { data } = $props();
-	let { segments, total, error } = $derived(data);
+
+	let segments = $derived(data.segments ?? []);
+	let total = $derived(data.total ?? 0);
+	let error = $derived(data.error);
 
 	let search = $state('');
 
