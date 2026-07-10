@@ -51,6 +51,7 @@ export async function POST({ request, platform }) {
 	}
 
 	const resolvedHighlights = Array.isArray(highlights) ? highlights : [];
+	const resolvedSummary = Array.isArray(summary) ? summary.map(s => `- ${s}`).join('\n') : (summary ?? null);
 	const now = new Date().toISOString();
 
 	try {
@@ -71,7 +72,7 @@ export async function POST({ request, platform }) {
 			   summarized_at = excluded.summarized_at`
 		).bind(
 			video_id, type, date ?? null, youtube_url, hct_url,
-			summary ?? null, JSON.stringify(resolvedHighlights),
+			resolvedSummary, JSON.stringify(resolvedHighlights),
 			transcript_source ?? 'youtube-captions',
 			speaker_map ? JSON.stringify(speaker_map) : null,
 			dave_segments ? JSON.stringify(dave_segments) : null,

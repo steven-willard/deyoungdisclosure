@@ -234,6 +234,12 @@ for (const meeting of toProcess) {
 
     const parsed = await summarize(meeting, segments, speaker_map);
 
+    // Claude may return summary as a string or an array of bullet strings — normalize to string
+    const rawSummary = parsed.summary;
+    const summaryStr: string = Array.isArray(rawSummary)
+      ? (rawSummary as string[]).map(s => `- ${s}`).join('\n')
+      : (rawSummary ?? '');
+
     const youtubeBase = meeting.youtube_url;
     const dave_segments = (parsed.dave_statements ?? []).map((d: any) => {
       const sec = d.timestamp ? parseTimestamp(d.timestamp) : 0;
@@ -249,7 +255,7 @@ for (const meeting of toProcess) {
 
     store.meetings[meeting.video_id] = {
       ...store.meetings[meeting.video_id],
-      summary: parsed.summary,
+      summary: summaryStr,
       highlights,
       dave_segments,
       summarized_at,
@@ -258,7 +264,7 @@ for (const meeting of toProcess) {
 
     // Throttle + retry D1 push
     await sleep(2000);
-    const pushErr = await pushToD1(meeting, parsed.summary, highlights, dave_segments, speaker_map, summarized_at);
+    const pushErr = await pushToD1(meeting, summaryStr, highlights, dave_segments, speaker_map, summarized_at);
     if (!pushErr) {
       console.log(`  ✓ Done — ${highlights.length} highlights, ${dave_segments.length} Dave segments`);
     } else {
