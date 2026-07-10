@@ -77,7 +77,7 @@ function downloadAudio(youtubeUrl: string, videoId: string, tempDir: string): st
   const nodePath = process.execPath.replace(/\\/g, '/');
   console.log(`    Downloading audio via yt-dlp...`);
   execSync(
-    `"${ytdlp}" -x --audio-format m4a --no-playlist -q --js-runtimes "nodejs:${nodePath}" -o "${outputTemplate}.%(ext)s" "${youtubeUrl}"`,
+    `"${ytdlp}" -x --audio-format m4a --no-playlist -q --js-runtimes "node:${nodePath}" -o "${outputTemplate}.%(ext)s" "${youtubeUrl}"`,
     { stdio: 'pipe' }
   );
 
