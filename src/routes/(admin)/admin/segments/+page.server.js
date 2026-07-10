@@ -1,4 +1,4 @@
-export async function load({ platform, request }) {
+export async function load({ platform }) {
 	try {
 		const result = await platform.env.DB.prepare(
 			`SELECT video_id, type, date, youtube_url, dave_segments
@@ -11,20 +11,25 @@ export async function load({ platform, request }) {
 
 		const segments = [];
 		for (const row of result.results ?? []) {
-			const daveSeg = JSON.parse(row.dave_segments ?? '[]');
-			for (const seg of daveSeg) {
-				segments.push({
-					video_id: row.video_id,
-					date: row.date,
-					meeting_type: row.type,
-					base_youtube_url: row.youtube_url,
-					...seg,
-				});
+			try {
+				const daveSeg = JSON.parse(row.dave_segments ?? '[]');
+				for (const seg of daveSeg) {
+					segments.push({
+						video_id: row.video_id,
+						date: row.date,
+						meeting_type: row.type,
+						base_youtube_url: row.youtube_url,
+						...seg,
+					});
+				}
+			} catch (e) {
+				console.error(`Failed to parse dave_segments for ${row.video_id}:`, e);
 			}
 		}
 
 		return { segments, total: segments.length };
-	} catch {
-		return { segments: [], total: 0, error: true };
+	} catch (e) {
+		console.error('Segments load error:', e);
+		return { segments: [], total: 0, error: String(e) };
 	}
 }
