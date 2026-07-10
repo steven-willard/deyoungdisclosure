@@ -73,9 +73,11 @@ function downloadAudio(youtubeUrl: string, videoId: string, tempDir: string): st
   // Output template without extension — yt-dlp appends .m4a after conversion
   const outputTemplate = join(tempDir, videoId);
 
+  // Pass Node.js as the JS runtime so yt-dlp can decrypt YouTube's player script
+  const nodePath = process.execPath.replace(/\\/g, '/');
   console.log(`    Downloading audio via yt-dlp...`);
   execSync(
-    `"${ytdlp}" -x --audio-format m4a --no-playlist -q -o "${outputTemplate}.%(ext)s" "${youtubeUrl}"`,
+    `"${ytdlp}" -x --audio-format m4a --no-playlist -q --js-runtimes "nodejs:${nodePath}" -o "${outputTemplate}.%(ext)s" "${youtubeUrl}"`,
     { stdio: 'pipe' }
   );
 
