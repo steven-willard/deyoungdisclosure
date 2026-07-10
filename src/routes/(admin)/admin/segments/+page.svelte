@@ -61,7 +61,7 @@
 	</div>
 {:else}
 	<div class="space-y-3">
-		{#each filtered as seg (seg.youtube_url + seg.timestamp_sec)}
+		{#each filtered as seg, i (i)}
 			<div class="bg-surface rounded-lg border border-white/10 p-4">
 				<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
 					<div class="flex items-center gap-2 flex-wrap">
