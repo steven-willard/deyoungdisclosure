@@ -19,9 +19,29 @@
 
 	function formatDate(d) {
 		if (!d) return '—';
-		// Handles both "June 18 2026" and "2026-06-18"
 		try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
 		catch { return d; }
+	}
+
+	function exportCsv() {
+		const rows = [
+			['Date', 'Topic', 'Statement', 'Timestamp', 'YouTube Link'],
+			...filtered.map(s => [
+				s.date ?? '',
+				s.topic ?? '',
+				s.text ?? '',
+				s.timestamp_sec ? `${Math.floor(s.timestamp_sec / 60)}:${String(s.timestamp_sec % 60).padStart(2, '0')}` : '',
+				s.youtube_url ?? '',
+			])
+		];
+		const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+		const blob = new Blob([csv], { type: 'text/csv' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `dave-segments${search ? '-filtered' : ''}.csv`;
+		a.click();
+		URL.revokeObjectURL(url);
 	}
 </script>
 
@@ -37,12 +57,21 @@
 		</p>
 	</div>
 	{#if total > 0}
-		<input
-			type="text"
-			bind:value={search}
-			placeholder="Search statements..."
-			class="bg-surface border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-accent transition-colors w-full sm:w-64"
-		/>
+		<div class="flex items-center gap-2">
+			<input
+				type="text"
+				bind:value={search}
+				placeholder="Search statements..."
+				class="bg-surface border border-white/10 rounded px-3 py-1.5 text-sm text-text placeholder-muted focus:outline-none focus:border-accent transition-colors w-full sm:w-56"
+			/>
+			<button
+				onclick={exportCsv}
+				class="shrink-0 px-3 py-1.5 text-xs font-medium rounded border border-white/10 text-muted hover:text-text hover:border-white/20 transition-colors"
+				title="Export {filtered.length} segment{filtered.length === 1 ? '' : 's'} to CSV"
+			>
+				↓ CSV
+			</button>
+		</div>
 	{/if}
 </div>
 
