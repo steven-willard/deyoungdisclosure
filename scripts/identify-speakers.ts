@@ -1,7 +1,7 @@
 /**
- * Use Claude to identify speaker labels in an AssemblyAI transcript.
- * Uses multiple strategies beyond roll call: direct address, self-intro,
- * motions, pledge lead, process of elimination, etc.
+ * Use Claude to identify ALL speaker labels in an AssemblyAI transcript.
+ * Strategies: roll call, direct address, self-intro, motions, pledge lead,
+ * conversational attribution, process of elimination.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -12,26 +12,30 @@ export type SpeakerMap = Record<string, string | null>;
 const MODEL = 'claude-haiku-4-5-20251001';
 
 /**
- * Build a representative sample across the whole transcript, not just the opening.
- * Roll calls are usually early, but name-drops, motions, and direct address
- * happen throughout. Sample opening heavily + mid + late slices.
+ * Sample utterances across the full transcript.
+ * Takes more points than before to maximize chances of catching
+ * roll calls, name-drops, and direct address no matter where they occur.
  */
 function buildSample(utterances: AssemblyUtterance[]): AssemblyUtterance[] {
   const total = utterances.length;
-  if (total <= 500) return utterances;
+  if (total <= 600) return utterances;
 
-  const opening = utterances.slice(0, 300);
-  const midStart = Math.floor(total * 0.4);
-  const mid = utterances.slice(midStart, midStart + 100);
-  const lateStart = Math.floor(total * 0.75);
-  const late = utterances.slice(lateStart, lateStart + 100);
+  // Heavy opening (roll call usually early), then 4 slices through the rest
+  const slices = [
+    utterances.slice(0, 350),
+    utterances.slice(Math.floor(total * 0.25), Math.floor(total * 0.25) + 80),
+    utterances.slice(Math.floor(total * 0.45), Math.floor(total * 0.45) + 80),
+    utterances.slice(Math.floor(total * 0.65), Math.floor(total * 0.65) + 80),
+    utterances.slice(Math.floor(total * 0.85), Math.floor(total * 0.85) + 60),
+  ];
 
-  // Deduplicate (opening might overlap with mid/late on short meetings)
   const seen = new Set<number>();
   const result: AssemblyUtterance[] = [];
-  for (const u of [...opening, ...mid, ...late]) {
-    const idx = utterances.indexOf(u);
-    if (!seen.has(idx)) { seen.add(idx); result.push(u); }
+  for (const slice of slices) {
+    for (const u of slice) {
+      const idx = utterances.indexOf(u);
+      if (!seen.has(idx)) { seen.add(idx); result.push(u); }
+    }
   }
   return result;
 }
@@ -48,64 +52,70 @@ export async function identifySpeakers(
 
   const prompt = `This is a Holland Charter Township Board of Trustees meeting transcript (date: ${meetingDate ?? 'unknown'}). Speakers are labeled A, B, C, etc. by an AI transcription service.
 
-Your job: identify the full name of each speaker you can confidently match.
+Your job: identify the full name of EVERY speaker you can confidently match — not just Dave DeYoung.
 
-KNOWN PARTICIPANTS:
-- Dave DeYoung (Trustee — most important to identify)
-- Russ TeSlaa (Township Supervisor — typically chairs the meeting, calls it to order)
-- Jim DeGraaf (Township Clerk — reads roll call names, takes minutes)
-- Other trustees: Douglas Brinks, Bob Dykstra, Jenny Hamzik
-- Non-board speakers: department heads, attorneys, public commenters, consultants
+KNOWN PARTICIPANTS (try to identify all of these):
+- Dave DeYoung (Trustee)
+- Russ TeSlaa (Township Supervisor — typically chairs the meeting, calls it to order, runs the agenda)
+- Jim DeGraaf (Township Clerk — reads names during roll call, manages minutes, administers oaths)
+- Douglas Brinks (Trustee)
+- Bob Dykstra (Trustee)
+- Jenny Hamzik (Trustee)
+- Non-board: department heads (police chief, fire chief, DPW director), township attorney, consultants, public commenters
 
-IDENTIFICATION STRATEGIES — use ALL of these, not just roll call:
+IDENTIFICATION STRATEGIES — apply ALL of these:
 
 1. ROLL CALL VOTES
-   - The Clerk reads each trustee's last name alphabetically; that trustee responds "yes"/"no"
-   - Example: Clerk says "DeYoung?" → next speaker says "Yes" → that speaker is Dave DeYoung
-   - Names read in alpha order helps confirm: Brinks → DeYoung → Dykstra → etc.
+   - Clerk reads each trustee's last name alphabetically; that trustee responds "yes"/"no"
+   - Alpha order helps sequence: Brinks → DeYoung → Dykstra → Hamzik → TeSlaa
+   - The person reading names is the Clerk (Jim DeGraaf)
 
 2. DIRECT ADDRESS BEFORE RESPONSE
-   - "Dave, can you clarify that?" → the very next speaker is Dave DeYoung
-   - "Trustee DeYoung, you had a comment?" → next speaker is Dave
-   - "Russ, do you want to open that up?" → next speaker is Russ TeSlaa
+   - "Dave, can you explain that?" → next speaker is Dave DeYoung
+   - "Trustee Dykstra, you had a comment?" → next speaker is Bob Dykstra
+   - "Russ, do you want to open?" → next speaker is Russ TeSlaa
 
-3. PLEDGE OF ALLEGIANCE
-   - The chair often asks a specific trustee to lead the Pledge
-   - "Dave, would you lead us in the Pledge?" → next speaker is Dave
+3. MEETING CHAIR ROLE
+   - The person who calls the meeting to order, runs the agenda, and recognizes speakers is the Supervisor (Russ TeSlaa)
+   - Phrases: "Meeting will come to order", "We'll move to the next item", "Is there a motion?"
 
-4. FORMAL MOTIONS
-   - "I move to approve..." followed by the chair attributing it: "Motion by Trustee DeYoung"
-   - Or the mover self-identifies: "I'll make a motion — Dave DeYoung, Trustee"
+4. CLERK ROLE
+   - Reads names during roll call, records votes, announces results
+   - Phrases: "DeYoung?", "All in favor?", "Motion carries", "The record will reflect"
 
-5. SELF-INTRODUCTION
-   - "I'm Dave DeYoung, I'm a trustee..." or "This is Dave DeYoung..."
+5. PLEDGE / PRAYER LEADER
+   - Chair typically asks a specific trustee: "Dave, would you lead us in the Pledge?" → next speaker is Dave
+   - Or "Russ, would you open us in prayer?" → next speaker is Russ
 
-6. ROLE-BASED PATTERNS
-   - The person who calls the meeting to order is almost always Supervisor Russ TeSlaa
-   - The person who reads agenda items and names during roll call is the Clerk (Jim DeGraaf)
-   - Department heads (police chief, fire chief, DPW director) introduce themselves by name/title
+6. FORMAL MOTIONS
+   - "I move to approve..." — sometimes followed by "Motion by Trustee DeYoung" confirming who spoke
+   - Or the seconder is named: "Seconded by Trustee Brinks"
 
-7. CONVERSATIONAL ATTRIBUTION
-   - "Following up on Dave's point..." → the previous speaker who made that point is Dave
-   - "As Trustee DeYoung mentioned..." → the earlier speaker on that topic is Dave
-   - "Thanks, Dave" after someone finishes speaking → that speaker was Dave
+7. SELF-INTRODUCTION
+   - "I'm Dave DeYoung, Trustee for Holland Charter Township..."
+   - Department heads often say: "I'm [Name], your Police Chief / Fire Chief / DPW Director"
 
-8. PROCESS OF ELIMINATION
-   - Once you identify the Supervisor, Clerk, and 2-3 trustees, the remaining board voices narrow down
-   - Non-board speakers (public, staff, consultants) often identify themselves explicitly
+8. CONVERSATIONAL ATTRIBUTION
+   - "Following up on Dave's point..." → recent prior speaker on that topic = Dave
+   - "As Trustee Hamzik mentioned..." → that earlier speaker = Jenny Hamzik
+   - "Thanks, Bob" after someone finishes = that speaker was Bob Dykstra
 
-Return ONLY valid JSON:
+9. PROCESS OF ELIMINATION
+   - Once you've identified Supervisor, Clerk, and several trustees, remaining board voices are the others
+   - Non-board members (staff, public) often introduce themselves or get introduced
+
+Return ONLY valid JSON — no markdown, no extra text:
 {
   "speaker_map": {
     "A": "Full Name or null",
     "B": "Full Name or null"
   },
-  "dave_speaker": "the single letter for Dave DeYoung, or null if not found",
+  "dave_speaker": "letter for Dave DeYoung or null",
   "confidence": "high|medium|low",
   "notes": "one sentence on how you identified Dave specifically, or why you could not"
 }
 
-Only set a name when you are confident — use null if uncertain. Do not guess.
+Only assign a name when you are confident. Set null if uncertain. Do not guess.
 
 TRANSCRIPT:
 ${formatted}`;
@@ -123,7 +133,8 @@ ${formatted}`;
 
     const dave = parsed.dave_speaker;
     const map: SpeakerMap = parsed.speaker_map ?? {};
-    console.log(`    Speaker ID (${parsed.confidence}): Dave = Speaker ${dave ?? '?'} — ${parsed.notes}`);
+    const identified = Object.values(map).filter(Boolean).length;
+    console.log(`    Speaker ID (${parsed.confidence}): ${identified} speakers identified, Dave = Speaker ${dave ?? '?'} — ${parsed.notes}`);
 
     return map;
   } catch (e: any) {

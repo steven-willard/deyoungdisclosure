@@ -90,6 +90,9 @@ function downloadAudio(youtubeUrl: string, videoId: string, tempDir: string): st
   return outPath;
 }
 
+// Persistent cache so audio isn't re-downloaded on re-runs
+const AUDIO_CACHE_DIR = 'scripts/audio-cache';
+
 export async function transcribeWithAssemblyAI(
   youtubeUrl: string,
   videoId: string,
@@ -97,20 +100,23 @@ export async function transcribeWithAssemblyAI(
 ): Promise<AssemblyResult> {
   const client = new AssemblyAI({ apiKey });
 
-  const tempDir = join(tmpdir(), 'deyoung-transcribe');
-  if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true });
+  if (!existsSync(AUDIO_CACHE_DIR)) mkdirSync(AUDIO_CACHE_DIR, { recursive: true });
 
-  // Clean up any leftover files for this video before starting
-  readdirSync(tempDir).filter(f => f.startsWith(videoId)).forEach(f => {
-    try { unlinkSync(join(tempDir, f)); } catch {}
-  });
-
-  const tempPath = downloadAudio(youtubeUrl, videoId, tempDir);
+  // Check cache first — skip download if already present
+  const cachedPath = join(AUDIO_CACHE_DIR, `${videoId}.m4a`);
+  let audioPath: string;
+  if (existsSync(cachedPath)) {
+    console.log(`    Audio found in cache: ${videoId}.m4a`);
+    audioPath = cachedPath;
+  } else {
+    // Download to cache (permanent) instead of temp dir
+    audioPath = downloadAudio(youtubeUrl, videoId, AUDIO_CACHE_DIR);
+  }
 
   try {
     console.log(`    Submitting to AssemblyAI...`);
     const transcript = await client.transcripts.transcribe({
-      audio: tempPath,
+      audio: audioPath,
       speech_models: ['universal-3-5-pro', 'universal-2'],
       speaker_labels: true,
       keyterms_prompt: KEYTERMS,
@@ -146,8 +152,9 @@ export async function transcribeWithAssemblyAI(
     console.log(`    Transcription complete — ${words.length.toLocaleString()} words, ~${durationMin} min audio`);
 
     return { transcript: transcript.text ?? '', utterances, words };
-  } finally {
-    try { unlinkSync(tempPath); } catch {}
+  } catch (e) {
+    // Don't delete the cache file on failure — keep it for retry
+    throw e;
   }
 }
 

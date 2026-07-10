@@ -21,6 +21,16 @@ _context/
 # PDFs (agreements, private docs)
 *.pdf
 
+# Audio cache — large binary files, never commit
+scripts/audio-cache/
+
+# Local script outputs — generated, not source
+scripts/meetings-output.json
+scripts/speaker-review.json
+
+# JS player scripts dumped by yt-dlp
+*.js[0-9]*-player-script.js
+
 # OS
 .DS_Store
 Thumbs.db
