@@ -42,19 +42,12 @@ function saveStore() {
   writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
 }
 
-function matchQuoteToOffset(quote: string, segments: { text: string; offset: number }[]): number {
-  const quoteWords = quote.toLowerCase().split(/\W+/).filter(w => w.length > 3);
-  if (quoteWords.length === 0) return Math.round(segments[0]?.offset / 1000 ?? 0);
-  const quoteSet = new Set(quoteWords);
-  let bestScore = -1;
-  let bestOffset = segments[0]?.offset ?? 0;
-  for (let i = 0; i < segments.length; i++) {
-    const window = segments.slice(i, i + 3).map(s => s.text).join(" ").toLowerCase().split(/\W+/).filter(w => w.length > 3);
-    const hits = window.filter(w => quoteSet.has(w)).length;
-    const score = hits / quoteSet.size;
-    if (score > bestScore) { bestScore = score; bestOffset = segments[i].offset; }
-  }
-  return Math.round(bestOffset / 1000);
+/** Parse a timestamp string like "5:01" or "1:05:30" to total seconds. */
+function parseTimestamp(ts: string): number {
+  const parts = ts.trim().split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] ?? 0;
 }
 
 // Find all BOT meetings in meetings-store.json
@@ -132,11 +125,12 @@ Dave DeYoung's speaker label: ${daveSpeaker ? `Speaker ${daveSpeaker}` : 'Unknow
 Return JSON:
 {
   "summary": "markdown — 3-6 bullet points: agenda items, votes (with counts), key decisions, notable public comment",
-  "highlights": [{ "topic": "short label", "quote": "verbatim or near-verbatim quote" }],
-  "dave_statements": [{ "topic": "label (5 words max)", "quote": "verbatim quote of what Dave said" }]
+  "highlights": [{ "topic": "short label", "quote": "verbatim or near-verbatim quote", "timestamp": "M:SS from the [M:SS] prefix on that line" }],
+  "dave_statements": [{ "topic": "label (5 words max)", "quote": "verbatim quote of what Dave said", "timestamp": "M:SS from the [M:SS] prefix on that line" }]
 }
 
 highlights: 5-10 most significant moments. dave_statements: ALL substantive things Dave said.
+For timestamp: copy the [M:SS] or [H:MM:SS] value that appears at the START of the line containing that quote. This is critical for accurate video deep links.
 Do not use double-quote characters inside string values — use single quotes or rephrase.
 
 TRANSCRIPT:
@@ -159,13 +153,13 @@ ${formatted}`
 
     const youtubeBase = meeting.youtube_url;
     const dave_segments = (parsed.dave_statements ?? []).map((d: any) => {
-      const sec = matchQuoteToOffset(d.quote, segments);
+      const sec = d.timestamp ? parseTimestamp(d.timestamp) : 0;
       return { text: d.quote, timestamp_sec: sec, youtube_url: `${youtubeBase}&t=${sec}`, topic: d.topic };
     });
 
     const highlights = (parsed.highlights ?? []).map((h: any) => ({
       topic: h.topic, quote: h.quote,
-      timestamp_sec: matchQuoteToOffset(h.quote, segments),
+      timestamp_sec: h.timestamp ? parseTimestamp(h.timestamp) : 0,
     }));
 
     // 4. Update store
